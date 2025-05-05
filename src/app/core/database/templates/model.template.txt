@@ -1,0 +1,57 @@
+import { BaseModel, BaseTable, Migration, generateTableSchema, generateAddColumnStatement } from '../models/base.model';
+import { NEXT_MIGRATION_VERSION } from '../database.config';
+
+export interface NewEntityName extends BaseModel {
+  // Define your entity properties here
+  name: string;
+  // Add more properties as needed
+}
+
+export interface NewEntityNameTable extends BaseTable {
+  // Define database table columns (snake_case)
+  name: string;
+  // Add more columns as needed
+}
+
+// Migration history for the entity table (including initial table creation)
+export const NEW_ENTITY_NAME_MIGRATIONS: Migration[] = [
+  {
+    version: NEXT_MIGRATION_VERSION, // Use the next available version from database.config.ts
+    description: 'Create new_entity_names table',
+    queries: [
+      generateTableSchema('new_entity_names', [
+        'name TEXT NOT NULL',
+        // Add more column definitions as needed
+      ])
+    ]
+  }
+  // Add future migrations as needed
+];
+
+// Then update models/index.ts to include these migrations:
+/*
+export const ALL_MIGRATIONS = [
+  ...USER_MIGRATIONS,
+  ...NEW_ENTITY_NAME_MIGRATIONS,
+  // Add migrations from other models here as you create them
+];
+*/
+
+// And update database.config.ts to increase the version number:
+/*
+export const DATABASE_CONFIG = {
+  name: 'ngomong_db',
+  version: 4, // Or whatever the new highest version is
+  encryption: false,
+  mode: 'no-encryption' as const
+};
+*/
+
+// Also update the Dexie schema in database.service.ts:
+/*
+// v4 migration: Add new table
+this.version(4).stores({
+  users: '++id, username, email, phone_number, preferences, created_at',
+  new_entity_names: '++id, name, created_at'
+});
+*/

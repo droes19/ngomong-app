@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { AlertController, LoadingController, ToastController } from '@ionic/angular/standalone';
 import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
+import { UserService } from '../core/database/services/user.service';
+import { AuthService } from '../core/auth/auth.service';
 
 @Component({
   selector: 'app-auth',
@@ -22,22 +24,24 @@ export class AuthPage implements OnInit {
   countdownInterval: any;
   verificationMethod = 'email'; // Default to email verification
   contactInfo = ''; // Will store either email or phone based on selection
+  showAlternativeMethod = false; // Flag to show/hide alternative method option
 
   constructor(
     public formBuilder: FormBuilder,
     private alertController: AlertController,
     private loadingController: LoadingController,
     private toastController: ToastController,
-    private router: Router
+    private router: Router,
+    private userService: UserService,
+    private authService: AuthService
   ) { }
 
   ngOnInit() {
     this.registerForm = this.formBuilder.group({
-      //name: ['', [Validators.required, Validators.minLength(2)]],
       contactMethod: this.formBuilder.group({
-        method: ['email', Validators.required],
-        email: ['', [Validators.pattern('[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$')]],
-        phoneNumber: ['', [Validators.pattern('^[0-9]{10}$')]]
+        method: ['email', Validators.required], // Default is now always email
+        email: ['', [Validators.required, Validators.pattern('[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$')]],
+        phoneNumber: ['', [Validators.pattern('^[0-9]{10}$')]] // Still kept for future use
       }, { validators: this.contactMethodValidator }),
       termsAccepted: [false, Validators.requiredTrue]
     });
@@ -82,7 +86,12 @@ export class AuthPage implements OnInit {
     return this.verificationForm.controls;
   }
 
-  // Switch verification method between email and phone
+  // For future use when phone option is enabled
+  toggleAlternativeMethod() {
+    this.showAlternativeMethod = !this.showAlternativeMethod;
+  }
+
+  // Switch verification method between email and phone - kept for future functionality
   switchVerificationMethod(method: string | number | undefined) {
     const contactMethodGroup = this.registerForm.get('contactMethod') as FormGroup;
     contactMethodGroup.get('method')?.setValue(method);
@@ -105,12 +114,10 @@ export class AuthPage implements OnInit {
       return;
     }
 
-    // Get contact info based on selected verification method
+    // Get contact info based on selected verification method (always email for now)
     const contactMethodGroup = this.registerForm.get('contactMethod') as FormGroup;
-    this.verificationMethod = contactMethodGroup.get('method')?.value;
-    this.contactInfo = this.verificationMethod === 'email'
-      ? contactMethodGroup.get('email')?.value
-      : contactMethodGroup.get('phoneNumber')?.value;
+    this.verificationMethod = contactMethodGroup.get('method')?.value || 'email';
+    this.contactInfo = contactMethodGroup.get('email')?.value || '';
 
     // Show loading indicator
     const loading = await this.loadingController.create({
@@ -120,12 +127,11 @@ export class AuthPage implements OnInit {
     await loading.present();
 
     try {
-      // Check if email/phone already exists through API
+      // Check if email already exists through API
       const exists = await this.checkIfContactExists(
         this.verificationMethod,
         this.contactInfo
       );
-      console.log(exists);
 
       if (exists) {
         await loading.dismiss();
@@ -133,7 +139,7 @@ export class AuthPage implements OnInit {
         // Show alert for existing account with continue and cancel options
         const alert = await this.alertController.create({
           header: 'Account Already Exists',
-          message: `This ${this.verificationMethod} is already registered. Do you want to continue using this ${this.verificationMethod} on this device?`,
+          message: `This email address is already registered. Do you want to continue using this email on this device?`,
           buttons: [
             {
               text: 'Cancel',
@@ -166,7 +172,7 @@ export class AuthPage implements OnInit {
 
                   // Show toast notification
                   const toast = await this.toastController.create({
-                    message: `Verification code sent to your ${this.verificationMethod === 'email' ? 'email' : 'phone'}`,
+                    message: `Verification code sent to your email`,
                     duration: 3000,
                     position: 'bottom',
                     color: 'success'
@@ -209,7 +215,7 @@ export class AuthPage implements OnInit {
 
         // Show toast notification
         const toast = await this.toastController.create({
-          message: `Verification code sent to your ${this.verificationMethod === 'email' ? 'email' : 'phone'}`,
+          message: `Verification code sent to your email`,
           duration: 3000,
           position: 'bottom',
           color: 'success'
@@ -321,7 +327,7 @@ export class AuthPage implements OnInit {
 
       // Show toast notification
       const toast = await this.toastController.create({
-        message: `New verification code sent to your ${this.verificationMethod === 'email' ? 'email' : 'phone'}`,
+        message: `New verification code sent to your email`,
         duration: 3000,
         position: 'bottom',
         color: 'success'
@@ -386,7 +392,7 @@ export class AuthPage implements OnInit {
         const header = contactExists ? 'Verification Successful' : 'Registration Successful';
         const message = contactExists
           ? `You can now use your account on this device.`
-          : `Welcome ${this.registerForm.value.name}! Your account has been created successfully.`;
+          : `Welcome! Your account has been created successfully.`;
 
         // Display success message
         const alert = await this.alertController.create({

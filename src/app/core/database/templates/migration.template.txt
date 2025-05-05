@@ -1,0 +1,58 @@
+import { Migration, generateAddColumnStatement } from '../models/base.model';
+import { NEXT_MIGRATION_VERSION } from '../database.config';
+
+/**
+ * Migration template for adding columns to an existing table
+ * 
+ * Instructions:
+ * 1. Create a new migration in your model file (e.g., user.model.ts)
+ * 2. Add the migration to your model's migrations array
+ * 3. Update the NEXT_MIGRATION_VERSION in database.config.ts
+ * 4. Update the DATABASE_CONFIG.version in database.config.ts
+ * 5. Update the Dexie schema in initWebDatabase method in database.service.ts
+ * 6. Run validateMigrations() during development to check for issues
+ */
+
+// Example: Adding a new column to the users table
+export const NEW_USER_MIGRATION: Migration = {
+  version: NEXT_MIGRATION_VERSION, // Use the next available version from database.config.ts
+  description: 'Add new_column to users table',
+  queries: [
+    generateAddColumnStatement('users', 'new_column TEXT')
+  ]
+};
+
+// Then in your model file (e.g., user.model.ts), add this migration to the USER_MIGRATIONS array:
+/*
+export const USER_MIGRATIONS: Migration[] = [
+  // Existing migrations...
+  {
+    version: 4,
+    description: 'Add new_column to users table',
+    queries: [
+      generateAddColumnStatement('users', 'new_column TEXT')
+    ]
+  }
+];
+*/
+
+// And update the interface definitions:
+/*
+export interface User extends BaseModel {
+  // Existing fields...
+  newColumn?: string; // New field
+}
+
+export interface UserTable extends BaseTable {
+  // Existing fields...
+  new_column?: string; // New field
+}
+*/
+
+// In database.service.ts, update the Dexie schema:
+/*
+// v4 migration: Add new_column
+this.version(4).stores({
+  users: '++id, username, email, phone_number, preferences, new_column, created_at'
+});
+*/

@@ -1,0 +1,212 @@
+import { Injectable } from '@angular/core';
+import { DatabaseService } from '../services/database.service';
+import { NewEntityName, NewEntityNameTable } from '../models/new-entity-name.model';
+import { getCurrentTimestamp } from '../models/base.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class NewEntityNameService {
+  constructor(private databaseService: DatabaseService) {}
+
+  /**
+   * Create a new entity
+   */
+  async create(entity: NewEntityName): Promise<number | undefined> {
+    const now = getCurrentTimestamp();
+    const entityToInsert = {
+      ...entity,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    try {
+      if (this.databaseService.isNativeDatabase()) {
+        // SQLite implementation
+        const result = await this.databaseService.executeCommand(
+          `INSERT INTO new_entity_names (
+            name,
+            created_at, 
+            updated_at
+          ) VALUES (?, ?, ?)`,
+          [
+            entityToInsert.name,
+            entityToInsert.createdAt,
+            entityToInsert.updatedAt
+          ]
+        );
+        return result.changes?.lastId;
+      } else {
+        // Dexie implementation
+        const dexie = this.databaseService.getDexieInstance();
+        if (!dexie) throw new Error('Dexie database not initialized');
+        
+        const id = await dexie.newEntityNames.add({
+          name: entityToInsert.name,
+          created_at: entityToInsert.createdAt,
+          updated_at: entityToInsert.updatedAt
+        });
+        return id;
+      }
+    } catch (error) {
+      console.error('Error creating entity:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get entity by ID
+   */
+  async getById(id: number): Promise<NewEntityName | null> {
+    try {
+      if (this.databaseService.isNativeDatabase()) {
+        // SQLite implementation
+        const result = await this.databaseService.executeQuery(
+          'SELECT * FROM new_entity_names WHERE id = ?',
+          [id]
+        );
+        
+        if (result.values && result.values.length > 0) {
+          return this.mapTableToModel(result.values[0]);
+        }
+        return null;
+      } else {
+        // Dexie implementation
+        const dexie = this.databaseService.getDexieInstance();
+        if (!dexie) throw new Error('Dexie database not initialized');
+        
+        const entity = await dexie.newEntityNames.get(id);
+        return entity ? this.mapTableToModel(entity) : null;
+      }
+    } catch (error) {
+      console.error(`Error getting entity by ID ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all entities
+   */
+  async getAll(): Promise<NewEntityName[]> {
+    try {
+      if (this.databaseService.isNativeDatabase()) {
+        // SQLite implementation
+        const result = await this.databaseService.executeQuery('SELECT * FROM new_entity_names');
+        
+        if (result.values && result.values.length > 0) {
+          return result.values.map((entity: NewEntityNameTable) => this.mapTableToModel(entity));
+        }
+        return [];
+      } else {
+        // Dexie implementation
+        const dexie = this.databaseService.getDexieInstance();
+        if (!dexie) throw new Error('Dexie database not initialized');
+        
+        const entities = await dexie.newEntityNames.toArray();
+        return entities.map((entity: NewEntityNameTable) => this.mapTableToModel(entity));
+      }
+    } catch (error) {
+      console.error('Error getting all entities:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update entity
+   */
+  async update(id: number, updates: Partial<NewEntityName>): Promise<boolean> {
+    try {
+      const now = getCurrentTimestamp();
+      const updatedEntity = {
+        ...updates,
+        updatedAt: now
+      };
+      
+      if (this.databaseService.isNativeDatabase()) {
+        // Dynamically build the update query based on the provided fields
+        const updateFields: string[] = [];
+        const updateValues: any[] = [];
+        
+        for (const [key, value] of Object.entries(updatedEntity)) {
+          if (key === 'id') continue; // Skip the ID field
+          
+          // Convert camelCase to snake_case for SQL
+          const sqlKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          updateFields.push(`${sqlKey} = ?`);
+          updateValues.push(value);
+        }
+        
+        // Add the WHERE clause parameter
+        updateValues.push(id);
+        
+        // Execute the update query
+        const result = await this.databaseService.executeCommand(
+          `UPDATE new_entity_names SET ${updateFields.join(', ')} WHERE id = ?`,
+          updateValues
+        );
+        
+        return result.changes?.changes > 0;
+      } else {
+        // Dexie implementation
+        const dexie = this.databaseService.getDexieInstance();
+        if (!dexie) throw new Error('Dexie database not initialized');
+        
+        // Transform to snake_case for consistent field names
+        const dexieUpdates: any = {};
+        for (const [key, value] of Object.entries(updatedEntity)) {
+          if (key === 'id') continue; // Skip the ID
+          
+          // Convert camelCase to snake_case for consistency
+          const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          dexieUpdates[dbKey] = value;
+        }
+        
+        // Update the record
+        await dexie.newEntityNames.update(id, dexieUpdates);
+        return true;
+      }
+    } catch (error) {
+      console.error(`Error updating entity ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete entity
+   */
+  async delete(id: number): Promise<boolean> {
+    try {
+      if (this.databaseService.isNativeDatabase()) {
+        // SQLite implementation
+        const result = await this.databaseService.executeCommand(
+          'DELETE FROM new_entity_names WHERE id = ?',
+          [id]
+        );
+        
+        return result.changes?.changes > 0;
+      } else {
+        // Dexie implementation
+        const dexie = this.databaseService.getDexieInstance();
+        if (!dexie) throw new Error('Dexie database not initialized');
+        
+        await dexie.newEntityNames.delete(id);
+        return true;
+      }
+    } catch (error) {
+      console.error(`Error deleting entity ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Map database entity object to model
+   */
+  private mapTableToModel(entityTable: NewEntityNameTable): NewEntityName {
+    return {
+      id: entityTable.id,
+      name: entityTable.name,
+      createdAt: entityTable.created_at,
+      updatedAt: entityTable.updated_at
+    };
+  }
+}

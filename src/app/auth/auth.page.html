@@ -1,4 +1,4 @@
-<!-- register.page.html -->
+<!-- auth.page.html -->
 <ion-content class="ion-padding">
   <div class="centered-content">
     <!-- Step 1: Initial Registration Form -->
@@ -16,8 +16,40 @@
       >
         <!-- Form Group for Contact Method -->
         <div formGroupName="contactMethod">
-          <!-- Verification Method Selection -->
-          <div class="verification-method-selector">
+          <!-- Email input - Now the default and only visible option -->
+          <ion-item class="ion-no-padding">
+            <ion-label position="floating">Email Address</ion-label>
+            <ion-input
+              formControlName="email"
+              type="email"
+              autocomplete="email"
+            ></ion-input>
+          </ion-item>
+          <div
+            *ngIf="isSubmitted && contactMethodControl['email'].errors"
+            class="error-message"
+          >
+            <span *ngIf="contactMethodControl['email'].errors['required']"
+              >Email is required.</span
+            >
+            <span *ngIf="contactMethodControl['email'].errors['pattern']"
+              >Please enter a valid email address.</span
+            >
+          </div>
+
+          <!-- Hidden phone number field - kept for future feature -->
+          <input type="hidden" formControlName="method" value="email" />
+
+          <!-- Future feature toggle - can be enabled later -->
+          <!-- Uncomment when you want to enable phone option -->
+          <!--
+          <div class="alternative-method ion-text-center ion-margin-top" *ngIf="!showAlternativeMethod">
+            <ion-button fill="clear" size="small" (click)="toggleAlternativeMethod()">
+              Use phone number instead
+            </ion-button>
+          </div>
+
+          <div *ngIf="showAlternativeMethod">
             <ion-segment
               formControlName="method"
               (ionChange)="switchVerificationMethod($event.detail.value)"
@@ -29,55 +61,31 @@
                 <ion-label>Phone</ion-label>
               </ion-segment-button>
             </ion-segment>
-          </div>
 
-          <!-- Email Input (show when email method is selected) -->
-          <ion-item
-            *ngIf="contactMethodControl['method'].value === 'email'"
-            class="ion-no-padding"
-          >
-            <ion-label position="floating">Email Address</ion-label>
-            <ion-input
-              formControlName="email"
-              type="email"
-              autocomplete="email"
-            ></ion-input>
-          </ion-item>
-          <div
-            *ngIf="isSubmitted && contactMethodControl['method'].value === 'email' && contactMethodControl['email'].errors"
-            class="error-message"
-          >
-            <span *ngIf="contactMethodControl['email'].errors['required']"
-              >Email is required.</span
+            <ion-item
+              *ngIf="contactMethodControl['method'].value === 'phone'"
+              class="ion-no-padding"
             >
-            <span *ngIf="contactMethodControl['email'].errors['pattern']"
-              >Please enter a valid email address.</span
+              <ion-label position="floating">Phone Number</ion-label>
+              <ion-input
+                formControlName="phoneNumber"
+                type="tel"
+                autocomplete="tel"
+              ></ion-input>
+            </ion-item>
+            <div
+              *ngIf="isSubmitted && contactMethodControl['method'].value === 'phone' && contactMethodControl['phoneNumber'].errors"
+              class="error-message"
             >
+              <span *ngIf="contactMethodControl['phoneNumber'].errors['required']"
+                >Phone number is required.</span
+              >
+              <span *ngIf="contactMethodControl['phoneNumber'].errors['pattern']"
+                >Please enter a valid 10-digit phone number.</span
+              >
+            </div>
           </div>
-
-          <!-- Phone Input (show when phone method is selected) -->
-          <ion-item
-            *ngIf="contactMethodControl['method'].value === 'phone'"
-            class="ion-no-padding"
-          >
-            <ion-label position="floating">Phone Number</ion-label>
-            <ion-input
-              formControlName="phoneNumber"
-              type="tel"
-              autocomplete="tel"
-            ></ion-input>
-          </ion-item>
-          <div
-            *ngIf="isSubmitted && contactMethodControl['method'].value === 'phone' && contactMethodControl['phoneNumber'].errors"
-            class="error-message"
-          >
-            <span *ngIf="contactMethodControl['phoneNumber'].errors['required']"
-              >Phone number is required.</span
-            >
-            <span *ngIf="contactMethodControl['phoneNumber'].errors['pattern']"
-              >Please enter a valid 10-digit phone number.</span
-            >
-          </div>
+          -->
         </div>
 
         <!-- Terms & Conditions -->
