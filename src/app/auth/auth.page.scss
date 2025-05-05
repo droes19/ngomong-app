@@ -1,0 +1,166 @@
+/* register.page.scss */
+// Improved vertical centering
+ion-content {
+  --background: var(--ion-color-light, #f4f5f8);
+}
+
+.centered-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
+  max-width: 450px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+// For taller screens, add more padding
+@media (min-height: 700px) {
+  .centered-content {
+    padding: 5vh 0;
+  }
+}
+
+// For even taller screens
+@media (min-height: 900px) {
+  .centered-content {
+    padding: 10vh 0;
+  }
+}
+
+.logo-container {
+  margin-bottom: 30px;
+
+  .app-logo {
+    max-width: 120px;
+    margin-bottom: 15px;
+  }
+
+  h2 {
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: var(--ion-color-primary);
+  }
+
+  p {
+    margin-top: 0;
+    font-size: 14px;
+    color: var(--ion-color-medium);
+  }
+}
+
+ion-item {
+  margin-bottom: 5px;
+  --padding-start: 0;
+  border-radius: 8px;
+  --background: var(--ion-color-light-shade, #e0e0e0);
+
+  &.terms-checkbox {
+    margin-top: 15px;
+    --background: transparent;
+
+    ion-label {
+      font-size: 14px;
+      margin-left: 10px;
+
+      a {
+        color: var(--ion-color-primary);
+        text-decoration: none;
+      }
+    }
+  }
+}
+
+.error-message {
+  color: var(--ion-color-danger);
+  font-size: 12px;
+  margin-bottom: 15px;
+  padding-left: 5px;
+}
+
+// Verification method selector
+.verification-method-selector {
+  margin: 20px 0 10px;
+}
+
+ion-button[type="submit"] {
+  margin-top: 20px;
+  height: 50px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+// OTP Verification styles
+.verification-container {
+  padding-top: 10px;
+
+  .verification-icon {
+    font-size: 48px;
+    color: var(--ion-color-primary);
+    margin-bottom: 15px;
+  }
+
+  h2 {
+    font-weight: 600;
+    color: var(--ion-color-dark);
+    margin-bottom: 10px;
+  }
+
+  p {
+    color: var(--ion-color-medium);
+    margin-bottom: 30px;
+    padding: 0 20px;
+  }
+}
+
+// OTP Input styles
+.otp-input-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 30px 0;
+  padding: 0 10px;
+
+  .otp-input {
+    width: 48px;
+    height: 60px;
+    --padding-start: 0;
+    --padding-end: 0;
+    border-radius: 8px;
+    border: 2px solid var(--ion-color-medium);
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    --background: var(--ion-color-light);
+
+    &.ion-valid {
+      border-color: var(--ion-color-primary);
+    }
+
+    &.ion-invalid.ion-touched {
+      border-color: var(--ion-color-danger);
+    }
+  }
+}
+
+.resend-container {
+  p {
+    color: var(--ion-color-medium);
+    font-size: 14px;
+
+    ion-button {
+      --color: var(--ion-color-primary);
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: none;
+      margin: 0;
+
+      &[disabled] {
+        --color: var(--ion-color-medium);
+        opacity: 0.7;
+      }
+    }
+  }
+}

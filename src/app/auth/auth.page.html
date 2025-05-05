@@ -1,0 +1,217 @@
+<!-- register.page.html -->
+<ion-content class="ion-padding">
+  <div class="centered-content">
+    <!-- Step 1: Initial Registration Form -->
+    <div *ngIf="registrationStep === 1">
+      <div class="logo-container ion-text-center">
+        <img src="assets/logo.png" alt="App Logo" class="app-logo" />
+        <h2>Join Our Community</h2>
+        <p>Create an account to get started</p>
+      </div>
+
+      <form
+        [formGroup]="registerForm"
+        (ngSubmit)="submitInitialForm()"
+        novalidate
+      >
+        <!-- Form Group for Contact Method -->
+        <div formGroupName="contactMethod">
+          <!-- Verification Method Selection -->
+          <div class="verification-method-selector">
+            <ion-segment
+              formControlName="method"
+              (ionChange)="switchVerificationMethod($event.detail.value)"
+            >
+              <ion-segment-button value="email">
+                <ion-label>Email</ion-label>
+              </ion-segment-button>
+              <ion-segment-button value="phone">
+                <ion-label>Phone</ion-label>
+              </ion-segment-button>
+            </ion-segment>
+          </div>
+
+          <!-- Email Input (show when email method is selected) -->
+          <ion-item
+            *ngIf="contactMethodControl['method'].value === 'email'"
+            class="ion-no-padding"
+          >
+            <ion-label position="floating">Email Address</ion-label>
+            <ion-input
+              formControlName="email"
+              type="email"
+              autocomplete="email"
+            ></ion-input>
+          </ion-item>
+          <div
+            *ngIf="isSubmitted && contactMethodControl['method'].value === 'email' && contactMethodControl['email'].errors"
+            class="error-message"
+          >
+            <span *ngIf="contactMethodControl['email'].errors['required']"
+              >Email is required.</span
+            >
+            <span *ngIf="contactMethodControl['email'].errors['pattern']"
+              >Please enter a valid email address.</span
+            >
+          </div>
+
+          <!-- Phone Input (show when phone method is selected) -->
+          <ion-item
+            *ngIf="contactMethodControl['method'].value === 'phone'"
+            class="ion-no-padding"
+          >
+            <ion-label position="floating">Phone Number</ion-label>
+            <ion-input
+              formControlName="phoneNumber"
+              type="tel"
+              autocomplete="tel"
+            ></ion-input>
+          </ion-item>
+          <div
+            *ngIf="isSubmitted && contactMethodControl['method'].value === 'phone' && contactMethodControl['phoneNumber'].errors"
+            class="error-message"
+          >
+            <span *ngIf="contactMethodControl['phoneNumber'].errors['required']"
+              >Phone number is required.</span
+            >
+            <span *ngIf="contactMethodControl['phoneNumber'].errors['pattern']"
+              >Please enter a valid 10-digit phone number.</span
+            >
+          </div>
+        </div>
+
+        <!-- Terms & Conditions -->
+        <ion-item lines="none" class="ion-no-padding terms-checkbox">
+          <ion-checkbox
+            slot="start"
+            formControlName="termsAccepted"
+          ></ion-checkbox>
+          <ion-label
+            >I agree to the <a href="#">Terms & Conditions</a> and
+            <a href="#">Privacy Policy</a></ion-label
+          >
+        </ion-item>
+        <div
+          *ngIf="isSubmitted && errorControl['termsAccepted'].errors !== null && errorControl['termsAccepted'].errors['required']"
+          class="error-message"
+        >
+          You must accept the terms and conditions to register.
+        </div>
+
+        <!-- Submit Button -->
+        <ion-button
+          expand="block"
+          type="submit"
+          color="primary"
+          class="ion-margin-top"
+        >
+          Continue
+        </ion-button>
+      </form>
+    </div>
+
+    <!-- Step 2: OTP Verification Form -->
+    <div *ngIf="registrationStep === 2" class="verification-container">
+      <div class="ion-text-center">
+        <ion-icon name="lock-closed" class="verification-icon"></ion-icon>
+        <h2>Verification</h2>
+        <p>
+          Enter the 6-digit code sent to your
+          <strong>{{ contactInfo }}</strong>
+        </p>
+      </div>
+
+      <form [formGroup]="verificationForm" (ngSubmit)="verifyOTP()" novalidate>
+        <div class="otp-input-container">
+          <ion-input
+            class="otp-input"
+            formControlName="digit1"
+            type="tel"
+            maxlength="1"
+            #digit1
+            (ionInput)="onOtpInput($event, digit2)"
+          ></ion-input>
+          <ion-input
+            class="otp-input"
+            formControlName="digit2"
+            type="tel"
+            maxlength="1"
+            #digit2
+            (ionInput)="onOtpInput($event, digit3)"
+          ></ion-input>
+          <ion-input
+            class="otp-input"
+            formControlName="digit3"
+            type="tel"
+            maxlength="1"
+            #digit3
+            (ionInput)="onOtpInput($event, digit4)"
+          ></ion-input>
+          <ion-input
+            class="otp-input"
+            formControlName="digit4"
+            type="tel"
+            maxlength="1"
+            #digit4
+            (ionInput)="onOtpInput($event, digit5)"
+          ></ion-input>
+          <ion-input
+            class="otp-input"
+            formControlName="digit5"
+            type="tel"
+            maxlength="1"
+            #digit5
+            (ionInput)="onOtpInput($event, digit6)"
+          ></ion-input>
+          <ion-input
+            class="otp-input"
+            formControlName="digit6"
+            type="tel"
+            maxlength="1"
+            #digit6
+          ></ion-input>
+        </div>
+
+        <div
+          *ngIf="isVerificationSubmitted && !verificationForm.valid"
+          class="error-message ion-text-center"
+        >
+          Please enter all 6 digits of the verification code.
+        </div>
+
+        <ion-button
+          expand="block"
+          type="submit"
+          color="primary"
+          class="ion-margin-top"
+        >
+          Verify & Complete
+        </ion-button>
+
+        <!-- Back button (to replace the header back button) -->
+        <ion-button
+          expand="block"
+          fill="outline"
+          color="medium"
+          class="ion-margin-top"
+          (click)="goBack()"
+        >
+          Go Back
+        </ion-button>
+
+        <div class="resend-container ion-text-center ion-margin-top">
+          <p>
+            Didn't receive the code?
+            <ion-button
+              fill="clear"
+              [disabled]="countdown > 0"
+              (click)="resendOTP()"
+            >
+              Resend {{ countdown > 0 ? '(' + countdown + ')' : '' }}
+            </ion-button>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+</ion-content>
