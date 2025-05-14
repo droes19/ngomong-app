@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { UserService } from '../database/services/user.service';
 import { User } from '../database/models/user.model';
+import { ApiService } from '../api';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,8 @@ export class AuthService {
 
   constructor(
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private apiService: ApiService,
   ) {
     this.checkAuthentication();
   }
@@ -60,5 +62,9 @@ export class AuthService {
     this.currentUser = null;
     this.isAuthenticated = false;
     this.router.navigate(['/auth']);
+  }
+
+  isEmailRegistered(email: string) {
+    return this.apiService.get('registration/check-email', { email: email })
   }
 }

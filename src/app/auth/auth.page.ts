@@ -133,6 +133,10 @@ export class AuthPage implements OnInit {
         this.contactInfo
       );
 
+      if (exists === undefined) {
+        await loading.dismiss();
+        return;
+      }
       if (exists) {
         await loading.dismiss();
 
@@ -247,28 +251,45 @@ export class AuthPage implements OnInit {
   }
 
   // Check if contact info (email/phone) already exists
-  async checkIfContactExists(type: string, value: string): Promise<boolean> {
+  async checkIfContactExists(type: string, value: string): Promise<boolean | undefined> {
     // This would be an actual API call in production
     // For simulation purposes, we'll use a timeout and mock response
 
     return new Promise((resolve) => {
       // Simulating API call with timeout
-      setTimeout(() => {
-        // For demo purposes:
-        // - test@example.com and 1234567890 are "already registered"
-        // - all other values are considered available
 
-        if (type === 'email' && value === 'test@example.com') {
-          resolve(true); // Email exists
-        } else if (type === 'phone' && value === '1234567890') {
-          resolve(true); // Phone exists
-        } else {
-          resolve(false); // Contact info doesn't exist
-        }
-
-        // In production, replace with actual API call:
-        // return this.authService.checkContactExists(type, value).toPromise();
-      }, 1500);
+      if (type === 'email') {
+        this.authService.isEmailRegistered(value).subscribe({
+          next: (res: any) => {
+            resolve(res.exists)
+          },
+          error: async (_err: Error) => {
+            const alert = await this.alertController.create({
+              header: 'Error',
+              message: 'An error occurred. Please try again later.',
+              buttons: ['OK']
+            });
+            await alert.present()
+            resolve(undefined);
+          }
+        })
+      }
+      //setTimeout(() => {
+      //  // For demo purposes:
+      //  // - test@example.com and 1234567890 are "already registered"
+      //  // - all other values are considered available
+      //
+      //  if (type === 'email' && value === 'test@example.com') {
+      //    resolve(true); // Email exists
+      //  } else if (type === 'phone' && value === '1234567890') {
+      //    resolve(true); // Phone exists
+      //  } else {
+      //    resolve(false); // Contact info doesn't exist
+      //  }
+      //
+      //  // In production, replace with actual API call:
+      //  // return this.authService.checkContactExists(type, value).toPromise();
+      //}, 1500);
     });
   }
 
