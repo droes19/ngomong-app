@@ -1,10 +1,5 @@
-import { USER_MIGRATIONS } from './user.model';
+// Auto-generated index file for SQLite migration models
+// Generated on 2025-05-15T02:15:01.114Z
 
-export * from './base.model';
-export * from './user.model';
-
-// Export all migrations from all models
-export const ALL_MIGRATIONS = [
-  ...USER_MIGRATIONS,
-  // Add migrations from other models here as you create them
-];
+export { BaseModel, BaseTable } from './base.model';
+export { User, UserTable } from './user';

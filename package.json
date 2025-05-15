@@ -5,15 +5,16 @@
   "homepage": "https://ionicframework.com/",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --proxy-config proxy.conf.json --port=8100",
+    "start": "yarn run generate-db && ng serve --proxy-config proxy.conf.json --port=8100",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    "generate:all": "yarn run generate:model && yarn run generate:migration-sqlite && yarn run generate:migration-dexie",
-    "generate:migration-sqlite": "node ./scripts/sqlite-migrate-generator.js --dir ./migrations ./src/generate/sqlite-migrations.ts",
-    "generate:migration-dexie": "node ./scripts/sqlite-to-dexie-generator.js --dir ./migrations ./src/generate/dexie.ts",
-    "generate:model": "node ./scripts/sqlite-model-generator.js --dir ./migrations ./src/generate/model/"
+    "generate-db": "cd sqlite-migration-tools && npm run generate-all",
+    "generate-migrations": "cd sqlite-migration-tools && npm run generate-migrations",
+    "generate-models": "cd sqlite-migration-tools && npm run generate-models",
+    "generate-dexie": "cd sqlite-migration-tools && npm run generate-dexie",
+    "generate-services": "cd sqlite-migration-tools && npm run generate-services"
   },
   "private": true,
   "dependencies": {

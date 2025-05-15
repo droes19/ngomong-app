@@ -8,8 +8,8 @@ import {
 } from '@capacitor-community/sqlite';
 import Dexie from 'dexie';
 import { DATABASE_CONFIG } from '../database.config';
-import { ALL_MIGRATIONS } from '../models';
 import { validateMigrations } from '../migration-helper';
+import { ALL_MIGRATIONS, prepareMigrations } from '../migrations';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Directory, Filesystem } from '@capacitor/filesystem';
@@ -93,7 +93,7 @@ export class DatabaseService {
               DATABASE_CONFIG.name,
               false,
               DATABASE_CONFIG.mode,
-              DATABASE_CONFIG.version,
+              ALL_MIGRATIONS.length > 0 ? Math.max(...ALL_MIGRATIONS.map(m => m.version)) : 1,
               false
             );
             break;
@@ -136,37 +136,13 @@ export class DatabaseService {
    */
   private async initWebDatabase(): Promise<void> {
     try {
-      // Define Dexie database with all necessary tables
-      class NgomongDatabase extends Dexie {
-        // Define tables
-        users: Dexie.Table<any, number>;
+      // Import the generated AppDatabase class
+      const { AppDatabase } = await import('../dexie-schema');
 
-        constructor() {
-          super(DATABASE_CONFIG.name);
-
-          // Initial schema (v1)
-          this.version(1).stores({
-            users: '++id, username, email, created_at'
-          });
-
-          // v2 migration: Add phone_number
-          this.version(2).stores({
-            users: '++id, username, email, phone_number, created_at'
-          });
-
-          // v3 migration: Add preferences
-          this.version(3).stores({
-            users: '++id, username, email, phone_number, preferences, created_at'
-          });
-
-          // Initialize table references
-          this.users = this.table('users');
-        }
-      }
-
-      this.dexieDb = new NgomongDatabase();
+      // Create a new instance with the configuration name
+      this.dexieDb = new AppDatabase(DATABASE_CONFIG.name);
       this.db = this.dexieDb;
-      console.log('Dexie database initialized');
+      console.log('Dexie database initialized using generated schema');
     } catch (error) {
       console.error('Error initializing web database:', error);
       throw error;
@@ -221,24 +197,25 @@ export class DatabaseService {
       }
       console.log(`Running ${pendingMigrations.length} migrations...`);
 
-      // Run each migration in order
+      // Get prepared statements for Capacitor SQLite
+      const upgradeStatements = prepareMigrations();
+
+      // Filter the upgrade statements to only include pending migrations
+      const pendingUpgrades = upgradeStatements.filter(
+        upgrade => upgrade.toVersion > currentVersion
+      );
+
+      // Add all upgrade statements at once
+      if (pendingUpgrades.length > 0) {
+        console.log(`Adding ${pendingUpgrades.length} upgrade statements...`);
+        await this.sqlite!.addUpgradeStatement(DATABASE_CONFIG.name, pendingUpgrades);
+      }
+
+      // Run each migration in order to record them in the migrations table
       for (const migration of pendingMigrations) {
-        console.log(`Migrating to version ${migration.version}: ${migration.description}`);
-        console.log(migration)
+        console.log(`Recording migration to version ${migration.version}: ${migration.description}`);
 
         try {
-          // Use addUpgradeStatement for each migration query
-          let queries = []
-          for (const query of migration.queries) {
-            queries.push(query)
-          }
-          if (queries.length > 0) {
-            await this.sqlite!.addUpgradeStatement(DATABASE_CONFIG.name, [{
-              toVersion: migration.version,
-              statements: queries
-            }]);
-          }
-
           // Add migration record
           const recordStatement = {
             statement: `INSERT INTO migrations (version, description, executed_at) VALUES (?, ?, ?)`,
@@ -248,11 +225,11 @@ export class DatabaseService {
           await (this.db as SQLiteDBConnection).run(recordStatement.statement, recordStatement.values);
           console.log(`Migration to version ${migration.version} completed`);
         } catch (error) {
-          console.error(`Migration to version ${migration.version} failed:`, error);
+          console.error(`Recording migration to version ${migration.version} failed:`, error);
           throw error;
         }
       }
-      console.log(`Database migrated to version ${DATABASE_CONFIG.version}`);
+      console.log(`Database migrated to version ${Math.max(...pendingMigrations.map(m => m.version))}`);
     } catch (error) {
       console.error('Error running migrations:', error);
       throw error;
