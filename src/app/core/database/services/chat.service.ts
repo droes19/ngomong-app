@@ -1,24 +1,24 @@
-// Auto-generated TypeScript service for the user table
-// Generated on 2025-05-15T04:04:57.818Z
-// Originally defined in: V1__create_user_table.sql
+// Auto-generated TypeScript service for the chat table
+// Generated on 2025-05-15T02:51:28.902Z
+// Originally defined in: V5__create-chat-tables.sql
 
 import { Injectable } from '@angular/core';
 import { DatabaseService } from './database.service';
-import { User, UserTable } from '../models/user';
+import { Chat, ChatTable } from '../models/chat';
 
 @Injectable({
   providedIn: 'root'
 })
-export class UserService {
+export class ChatService {
   constructor(private databaseService: DatabaseService) {}
 
   /**
-   * Create a new user
+   * Create a new chat
    */
-  async create(user: User): Promise<number | undefined> {
+  async create(chat: Chat): Promise<number | undefined> {
     const now = new Date().toISOString();
     const entityToInsert = {
-      ...user,
+      ...chat,
       createdAt: now,
       updatedAt: now
     };
@@ -26,38 +26,21 @@ export class UserService {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // Convert model to snake_case for SQL database
-        const tableRow: UserTable = {
+        const tableRow: ChatTable = {
           id: entityToInsert.id || 0,
-          nickname: entityToInsert.nickname,
-          pin: entityToInsert.pin,
-          email: entityToInsert.email,
-          created_at: entityToInsert.createdAt,
-          updated_at: entityToInsert.updatedAt,
-          phone_number: entityToInsert.phoneNumber,
-          private_key: entityToInsert.privateKey,
+          message: entityToInsert.message,
+          user_id: entityToInsert.userId,
         };
 
         // SQLite implementation
         const result = await this.databaseService.executeCommand(
-          `INSERT INTO user (
-            id,
-            nickname,
-            pin,
-            email,
-            created_at,
-            updated_at,
-            phone_number,
-            private_key
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO chat (
+            message,
+            user_id
+          ) VALUES (?, ?)`,
           [
-            tableRow.id,
-            tableRow.nickname,
-            tableRow.pin,
-            tableRow.email,
-            tableRow.created_at,
-            tableRow.updated_at,
-            tableRow.phone_number || null,
-            tableRow.private_key || null
+            tableRow.message,
+            tableRow.user_id
           ]
         );
 
@@ -68,35 +51,30 @@ export class UserService {
         if (!dexie) throw new Error('Dexie database not initialized');
 
         // Convert model to table format for storage
-        const tableRow: UserTable = {
+        const tableRow: ChatTable = {
           id: entityToInsert.id || 0,
-          nickname: entityToInsert.nickname,
-          pin: entityToInsert.pin,
-          email: entityToInsert.email,
-          created_at: entityToInsert.createdAt,
-          updated_at: entityToInsert.updatedAt,
-          phone_number: entityToInsert.phoneNumber,
-          private_key: entityToInsert.privateKey,
+          message: entityToInsert.message,
+          user_id: entityToInsert.userId,
         };
 
-        const id = await dexie.user.add(tableRow);
+        const id = await dexie.chat.add(tableRow);
         return id;
       }
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Error creating chat:', error);
       throw error;
     }
   }
 
   /**
-   * Get user by ID
+   * Get chat by ID
    */
-  async getById(id: number): Promise<User | null> {
+  async getById(id: number): Promise<Chat | null> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeQuery(
-          'SELECT * FROM user WHERE id = ?',
+          'SELECT * FROM chat WHERE id = ?',
           [id]
         );
         
@@ -109,26 +87,26 @@ export class UserService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        const entity = await dexie.user.get(id);
+        const entity = await dexie.chat.get(id);
         return entity ? this.mapTableToModel(entity) : null;
       }
     } catch (error) {
-      console.error(`Error getting user by ID ${id}:`, error);
+      console.error(`Error getting chat by ID ${id}:`, error);
       throw error;
     }
   }
 
   /**
-   * Get all user
+   * Get all chat
    */
-  async getAll(): Promise<User[]> {
+  async getAll(): Promise<Chat[]> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
-        const result = await this.databaseService.executeQuery('SELECT * FROM user');
+        const result = await this.databaseService.executeQuery('SELECT * FROM chat');
         
         if (result.values && result.values.length > 0) {
-          return result.values.map((entity: UserTable) => this.mapTableToModel(entity));
+          return result.values.map((entity: ChatTable) => this.mapTableToModel(entity));
         }
         return [];
       } else {
@@ -136,19 +114,19 @@ export class UserService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        const entities = await dexie.user.toArray();
-        return entities.map((entity: UserTable) => this.mapTableToModel(entity));
+        const entities = await dexie.chat.toArray();
+        return entities.map((entity: ChatTable) => this.mapTableToModel(entity));
       }
     } catch (error) {
-      console.error('Error getting all user:', error);
+      console.error('Error getting all chat:', error);
       throw error;
     }
   }
 
   /**
-   * Update user
+   * Update chat
    */
-  async update(id: number, updates: Partial<User>): Promise<boolean> {
+  async update(id: number, updates: Partial<Chat>): Promise<boolean> {
     try {
       const now = new Date().toISOString();
       const updatedEntity = {
@@ -164,13 +142,8 @@ export class UserService {
         // Map of camelCase property names to database snake_case column names
         const fieldMappings: Record<string, string> = {
           id: 'id',
-          nickname: 'nickname',
-          pin: 'pin',
-          email: 'email',
-          createdAt: 'created_at',
-          updatedAt: 'updated_at',
-          phoneNumber: 'phone_number',
-          privateKey: 'private_key',
+          message: 'message',
+          userId: 'user_id',
         };
 
         for (const [key, value] of Object.entries(updatedEntity)) {
@@ -187,7 +160,7 @@ export class UserService {
 
         // Execute the update query
         const result = await this.databaseService.executeCommand(
-          `UPDATE user SET ${updateFields.join(', ')} WHERE id = ?`,
+          `UPDATE chat SET ${updateFields.join(', ')} WHERE id = ?`,
           updateValues
         );
 
@@ -200,13 +173,8 @@ export class UserService {
         // Map of camelCase property names to database snake_case column names
         const fieldMappings: Record<string, string> = {
           id: 'id',
-          nickname: 'nickname',
-          pin: 'pin',
-          email: 'email',
-          createdAt: 'created_at',
-          updatedAt: 'updated_at',
-          phoneNumber: 'phone_number',
-          privateKey: 'private_key',
+          message: 'message',
+          userId: 'user_id',
         };
 
         // Transform to snake_case for consistent field names
@@ -220,24 +188,24 @@ export class UserService {
         }
 
         // Update the record
-        await dexie.user.update(id, dexieUpdates);
+        await dexie.chat.update(id, dexieUpdates);
         return true;
       }
     } catch (error) {
-      console.error(`Error updating user ${id}:`, error);
+      console.error(`Error updating chat ${id}:`, error);
       throw error;
     }
   }
 
   /**
-   * Delete user
+   * Delete chat
    */
   async delete(id: number): Promise<boolean> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeCommand(
-          'DELETE FROM user WHERE id = ?',
+          'DELETE FROM chat WHERE id = ?',
           [id]
         );
         
@@ -247,11 +215,11 @@ export class UserService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        await dexie.user.delete(id);
+        await dexie.chat.delete(id);
         return true;
       }
     } catch (error) {
-      console.error(`Error deleting user ${id}:`, error);
+      console.error(`Error deleting chat ${id}:`, error);
       throw error;
     }
   }
@@ -259,16 +227,11 @@ export class UserService {
   /**
    * Map database entity object to model
    */
-  private mapTableToModel(tableRow: UserTable): User {
+  private mapTableToModel(tableRow: ChatTable): Chat {
     return {
       id: tableRow.id,
-      nickname: tableRow.nickname,
-      pin: tableRow.pin,
-      email: tableRow.email,
-      createdAt: tableRow.created_at,
-      updatedAt: tableRow.updated_at,
-      phoneNumber: tableRow.phone_number,
-      privateKey: tableRow.private_key,
+      message: tableRow.message,
+      userId: tableRow.user_id,
     };
   }
 }

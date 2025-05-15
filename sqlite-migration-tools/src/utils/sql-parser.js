@@ -362,7 +362,7 @@ function generateDexieSchemaString(table) {
   // For debugging
   console.log(`Generating Dexie schema for table ${table.name}`);
   console.log(`Table columns: ${table.columns.map(c => c.name).join(', ')}`);
-
+  
   // Add all indexed columns and column names that should be indexed
   const indexedColumns = new Set();
 
@@ -371,12 +371,47 @@ function generateDexieSchemaString(table) {
     table.indexedColumns.forEach(col => indexedColumns.add(col));
   }
 
-  // Add columns that should be indexed based on their properties
+  // Common fields that typically don't need indexing
+  const commonFields = new Set([
+    'created_at', 
+    'updated_at', 
+    'created_by',
+    'updated_by',
+    'deleted_at', 
+    'description',
+    'content',
+    'notes',
+    'comments'
+  ]);
+
+  // Add all columns except common fields
   table.columns.forEach(col => {
-    // Index any columns with special properties
-    if (col.isUnique || col.name.endsWith('_id') ||
-      col.name === 'email' || col.name === 'username' ||
-      col.name === 'phone_number' || col.name === 'private_key') {
+    // Skip primary key (already handled above)
+    if (col.isPrimaryKey) {
+      return;
+    }
+    
+    // Skip common fields that typically don't need indexing
+    if (commonFields.has(col.name)) {
+      return;
+    }
+    
+    // Always index fields that:
+    // 1. Are marked as unique
+    // 2. End with _id (likely foreign keys)
+    // 3. Have common indexable names (email, username, etc.)
+    // 4. Are not large text fields (likely to be queried)
+    const isUnique = col.isUnique;
+    const isForeignKey = col.name.endsWith('_id');
+    const isCommonIndexable = ['email', 'username', 'phone_number', 'private_key', 'api_key', 'code', 'status'].includes(col.name);
+    const isLargeTextField = col.tsType === 'string' && (
+      col.name.includes('description') || 
+      col.name.includes('content') || 
+      col.name.includes('text') || 
+      col.name.includes('body')
+    );
+    
+    if (isUnique || isForeignKey || isCommonIndexable || !isLargeTextField) {
       indexedColumns.add(col.name);
     }
   });

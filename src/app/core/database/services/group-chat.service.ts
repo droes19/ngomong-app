@@ -1,24 +1,24 @@
-// Auto-generated TypeScript service for the user table
-// Generated on 2025-05-15T04:04:57.818Z
-// Originally defined in: V1__create_user_table.sql
+// Auto-generated TypeScript service for the group_chat table
+// Generated on 2025-05-15T02:51:28.920Z
+// Originally defined in: V5__create-chat-tables.sql
 
 import { Injectable } from '@angular/core';
 import { DatabaseService } from './database.service';
-import { User, UserTable } from '../models/user';
+import { GroupChat, GroupChatTable } from '../models/group-chat';
 
 @Injectable({
   providedIn: 'root'
 })
-export class UserService {
+export class GroupChatService {
   constructor(private databaseService: DatabaseService) {}
 
   /**
-   * Create a new user
+   * Create a new groupchat
    */
-  async create(user: User): Promise<number | undefined> {
+  async create(groupchat: GroupChat): Promise<number | undefined> {
     const now = new Date().toISOString();
     const entityToInsert = {
-      ...user,
+      ...groupchat,
       createdAt: now,
       updatedAt: now
     };
@@ -26,38 +26,23 @@ export class UserService {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // Convert model to snake_case for SQL database
-        const tableRow: UserTable = {
-          id: entityToInsert.id || 0,
-          nickname: entityToInsert.nickname,
-          pin: entityToInsert.pin,
-          email: entityToInsert.email,
-          created_at: entityToInsert.createdAt,
-          updated_at: entityToInsert.updatedAt,
-          phone_number: entityToInsert.phoneNumber,
-          private_key: entityToInsert.privateKey,
+        const tableRow: GroupChatTable = {
+          chat_id: entityToInsert.chatId,
+          group_name: entityToInsert.groupName,
+          admin_user_id: entityToInsert.adminUserId,
         };
 
         // SQLite implementation
         const result = await this.databaseService.executeCommand(
-          `INSERT INTO user (
-            id,
-            nickname,
-            pin,
-            email,
-            created_at,
-            updated_at,
-            phone_number,
-            private_key
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO group_chat (
+            chat_id,
+            group_name,
+            admin_user_id
+          ) VALUES (?, ?, ?)`,
           [
-            tableRow.id,
-            tableRow.nickname,
-            tableRow.pin,
-            tableRow.email,
-            tableRow.created_at,
-            tableRow.updated_at,
-            tableRow.phone_number || null,
-            tableRow.private_key || null
+            tableRow.chat_id,
+            tableRow.group_name,
+            tableRow.admin_user_id
           ]
         );
 
@@ -68,35 +53,30 @@ export class UserService {
         if (!dexie) throw new Error('Dexie database not initialized');
 
         // Convert model to table format for storage
-        const tableRow: UserTable = {
-          id: entityToInsert.id || 0,
-          nickname: entityToInsert.nickname,
-          pin: entityToInsert.pin,
-          email: entityToInsert.email,
-          created_at: entityToInsert.createdAt,
-          updated_at: entityToInsert.updatedAt,
-          phone_number: entityToInsert.phoneNumber,
-          private_key: entityToInsert.privateKey,
+        const tableRow: GroupChatTable = {
+          chat_id: entityToInsert.chatId,
+          group_name: entityToInsert.groupName,
+          admin_user_id: entityToInsert.adminUserId,
         };
 
-        const id = await dexie.user.add(tableRow);
+        const id = await dexie.group_chat.add(tableRow);
         return id;
       }
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Error creating groupchat:', error);
       throw error;
     }
   }
 
   /**
-   * Get user by ID
+   * Get groupchat by ID
    */
-  async getById(id: number): Promise<User | null> {
+  async getById(id: number): Promise<GroupChat | null> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeQuery(
-          'SELECT * FROM user WHERE id = ?',
+          'SELECT * FROM group_chat WHERE chat_id = ?',
           [id]
         );
         
@@ -109,26 +89,26 @@ export class UserService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        const entity = await dexie.user.get(id);
+        const entity = await dexie.group_chat.get(id);
         return entity ? this.mapTableToModel(entity) : null;
       }
     } catch (error) {
-      console.error(`Error getting user by ID ${id}:`, error);
+      console.error(`Error getting groupchat by ID ${id}:`, error);
       throw error;
     }
   }
 
   /**
-   * Get all user
+   * Get all group_chat
    */
-  async getAll(): Promise<User[]> {
+  async getAll(): Promise<GroupChat[]> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
-        const result = await this.databaseService.executeQuery('SELECT * FROM user');
+        const result = await this.databaseService.executeQuery('SELECT * FROM group_chat');
         
         if (result.values && result.values.length > 0) {
-          return result.values.map((entity: UserTable) => this.mapTableToModel(entity));
+          return result.values.map((entity: GroupChatTable) => this.mapTableToModel(entity));
         }
         return [];
       } else {
@@ -136,19 +116,19 @@ export class UserService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        const entities = await dexie.user.toArray();
-        return entities.map((entity: UserTable) => this.mapTableToModel(entity));
+        const entities = await dexie.group_chat.toArray();
+        return entities.map((entity: GroupChatTable) => this.mapTableToModel(entity));
       }
     } catch (error) {
-      console.error('Error getting all user:', error);
+      console.error('Error getting all group_chat:', error);
       throw error;
     }
   }
 
   /**
-   * Update user
+   * Update groupchat
    */
-  async update(id: number, updates: Partial<User>): Promise<boolean> {
+  async update(id: number, updates: Partial<GroupChat>): Promise<boolean> {
     try {
       const now = new Date().toISOString();
       const updatedEntity = {
@@ -163,18 +143,13 @@ export class UserService {
 
         // Map of camelCase property names to database snake_case column names
         const fieldMappings: Record<string, string> = {
-          id: 'id',
-          nickname: 'nickname',
-          pin: 'pin',
-          email: 'email',
-          createdAt: 'created_at',
-          updatedAt: 'updated_at',
-          phoneNumber: 'phone_number',
-          privateKey: 'private_key',
+          chatId: 'chat_id',
+          groupName: 'group_name',
+          adminUserId: 'admin_user_id',
         };
 
         for (const [key, value] of Object.entries(updatedEntity)) {
-          if (key === 'id') continue; // Skip the ID field
+          if (key === 'chatId') continue; // Skip the ID field
 
           // Get the snake_case column name or convert camelCase to snake_case
           const sqlKey = fieldMappings[key] || key.replace(/([A-Z])/g, '_$1').toLowerCase();
@@ -187,7 +162,7 @@ export class UserService {
 
         // Execute the update query
         const result = await this.databaseService.executeCommand(
-          `UPDATE user SET ${updateFields.join(', ')} WHERE id = ?`,
+          `UPDATE group_chat SET ${updateFields.join(', ')} WHERE chat_id = ?`,
           updateValues
         );
 
@@ -199,20 +174,15 @@ export class UserService {
 
         // Map of camelCase property names to database snake_case column names
         const fieldMappings: Record<string, string> = {
-          id: 'id',
-          nickname: 'nickname',
-          pin: 'pin',
-          email: 'email',
-          createdAt: 'created_at',
-          updatedAt: 'updated_at',
-          phoneNumber: 'phone_number',
-          privateKey: 'private_key',
+          chatId: 'chat_id',
+          groupName: 'group_name',
+          adminUserId: 'admin_user_id',
         };
 
         // Transform to snake_case for consistent field names
         const dexieUpdates: any = {};
         for (const [key, value] of Object.entries(updatedEntity)) {
-          if (key === 'id') continue; // Skip the ID
+          if (key === 'chatId') continue; // Skip the ID
 
           // Get the snake_case column name or convert camelCase to snake_case
           const dbKey = fieldMappings[key] || key.replace(/([A-Z])/g, '_$1').toLowerCase();
@@ -220,24 +190,24 @@ export class UserService {
         }
 
         // Update the record
-        await dexie.user.update(id, dexieUpdates);
+        await dexie.group_chat.update(id, dexieUpdates);
         return true;
       }
     } catch (error) {
-      console.error(`Error updating user ${id}:`, error);
+      console.error(`Error updating groupchat ${id}:`, error);
       throw error;
     }
   }
 
   /**
-   * Delete user
+   * Delete groupchat
    */
   async delete(id: number): Promise<boolean> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeCommand(
-          'DELETE FROM user WHERE id = ?',
+          'DELETE FROM group_chat WHERE chat_id = ?',
           [id]
         );
         
@@ -247,11 +217,11 @@ export class UserService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        await dexie.user.delete(id);
+        await dexie.group_chat.delete(id);
         return true;
       }
     } catch (error) {
-      console.error(`Error deleting user ${id}:`, error);
+      console.error(`Error deleting groupchat ${id}:`, error);
       throw error;
     }
   }
@@ -259,16 +229,11 @@ export class UserService {
   /**
    * Map database entity object to model
    */
-  private mapTableToModel(tableRow: UserTable): User {
+  private mapTableToModel(tableRow: GroupChatTable): GroupChat {
     return {
-      id: tableRow.id,
-      nickname: tableRow.nickname,
-      pin: tableRow.pin,
-      email: tableRow.email,
-      createdAt: tableRow.created_at,
-      updatedAt: tableRow.updated_at,
-      phoneNumber: tableRow.phone_number,
-      privateKey: tableRow.private_key,
+      chatId: tableRow.chat_id,
+      groupName: tableRow.group_name,
+      adminUserId: tableRow.admin_user_id,
     };
   }
 }

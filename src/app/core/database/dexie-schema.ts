@@ -1,5 +1,5 @@
 // Auto-generated Dexie.js database class from SQLite migrations
-// Generated on 2025-05-15T02:15:01.121Z
+// Generated on 2025-05-15T04:04:57.776Z
 
 import Dexie from 'dexie';
 
@@ -8,8 +8,14 @@ import Dexie from 'dexie';
  * Dexie database class with all migrations applied
  */
 export class AppDatabase extends Dexie {
-  // Table for users
-  users: Dexie.Table<any, number>;
+  // Table for user
+  user: Dexie.Table<any, number>;
+  // Table for contacts
+  contacts: Dexie.Table<any, number>;
+  // Table for chat
+  chat: Dexie.Table<any, number>;
+  // Table for group_chat
+  group_chat: Dexie.Table<any, number>;
 
   constructor(dbName: string = 'AppDatabase') {
     super(dbName);
@@ -17,21 +23,38 @@ export class AppDatabase extends Dexie {
     // Define schema versions
     // v1 migration
     this.version(1).stores({
-      users: '++id, email, nickname, pin'
+      user: 'id, email, nickname, pin'
     });
 
     // v2 migration
     this.version(2).stores({
-      users: '++id, email, nickname, phone_number, pin'
+      user: 'id, email, nickname, phone_number, pin'
     });
 
     // v3 migration
     this.version(3).stores({
-      users: '++id, email, nickname, phone_number, pin, private_key'
+      user: 'id, email, nickname, phone_number, pin, private_key'
+    });
+
+    // v4 migration
+    this.version(4).stores({
+      user: 'id, email, nickname, phone_number, pin, private_key',
+      contacts: '++id, email, nickname, phone_number, pin, public_key'
+    });
+
+    // v5 migration
+    this.version(5).stores({
+      user: 'id, email, nickname, phone_number, pin, private_key',
+      contacts: '++id, email, nickname, phone_number, pin, public_key',
+      chat: '++id, message, user_id',
+      group_chat: 'chat_id, admin_user_id, group_name'
     });
 
     // Initialize table references
-    this.users = this.table('users');
+    this.user = this.table('user');
+    this.contacts = this.table('contacts');
+    this.chat = this.table('chat');
+    this.group_chat = this.table('group_chat');
   }
 }
 

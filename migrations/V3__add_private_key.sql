@@ -1,1 +1,1 @@
-ALTER TABLE users ADD COLUMN private_key TEXT;
+ALTER TABLE user ADD COLUMN private_key TEXT;

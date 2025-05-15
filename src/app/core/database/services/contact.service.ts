@@ -1,24 +1,24 @@
-// Auto-generated TypeScript service for the user table
-// Generated on 2025-05-15T04:04:57.818Z
-// Originally defined in: V1__create_user_table.sql
+// Auto-generated TypeScript service for the contacts table
+// Generated on 2025-05-15T02:51:28.891Z
+// Originally defined in: V4__create_contact_table.sql
 
 import { Injectable } from '@angular/core';
 import { DatabaseService } from './database.service';
-import { User, UserTable } from '../models/user';
+import { Contact, ContactTable } from '../models/contact';
 
 @Injectable({
   providedIn: 'root'
 })
-export class UserService {
+export class ContactService {
   constructor(private databaseService: DatabaseService) {}
 
   /**
-   * Create a new user
+   * Create a new contact
    */
-  async create(user: User): Promise<number | undefined> {
+  async create(contact: Contact): Promise<number | undefined> {
     const now = new Date().toISOString();
     const entityToInsert = {
-      ...user,
+      ...contact,
       createdAt: now,
       updatedAt: now
     };
@@ -26,38 +26,36 @@ export class UserService {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // Convert model to snake_case for SQL database
-        const tableRow: UserTable = {
+        const tableRow: ContactTable = {
           id: entityToInsert.id || 0,
           nickname: entityToInsert.nickname,
           pin: entityToInsert.pin,
           email: entityToInsert.email,
+          phone_number: entityToInsert.phoneNumber,
+          public_key: entityToInsert.publicKey,
           created_at: entityToInsert.createdAt,
           updated_at: entityToInsert.updatedAt,
-          phone_number: entityToInsert.phoneNumber,
-          private_key: entityToInsert.privateKey,
         };
 
         // SQLite implementation
         const result = await this.databaseService.executeCommand(
-          `INSERT INTO user (
-            id,
+          `INSERT INTO contacts (
             nickname,
             pin,
             email,
-            created_at,
-            updated_at,
             phone_number,
-            private_key
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            public_key,
+            created_at,
+            updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [
-            tableRow.id,
             tableRow.nickname,
             tableRow.pin,
             tableRow.email,
-            tableRow.created_at,
-            tableRow.updated_at,
             tableRow.phone_number || null,
-            tableRow.private_key || null
+            tableRow.public_key,
+            tableRow.created_at,
+            tableRow.updated_at
           ]
         );
 
@@ -68,35 +66,35 @@ export class UserService {
         if (!dexie) throw new Error('Dexie database not initialized');
 
         // Convert model to table format for storage
-        const tableRow: UserTable = {
+        const tableRow: ContactTable = {
           id: entityToInsert.id || 0,
           nickname: entityToInsert.nickname,
           pin: entityToInsert.pin,
           email: entityToInsert.email,
+          phone_number: entityToInsert.phoneNumber,
+          public_key: entityToInsert.publicKey,
           created_at: entityToInsert.createdAt,
           updated_at: entityToInsert.updatedAt,
-          phone_number: entityToInsert.phoneNumber,
-          private_key: entityToInsert.privateKey,
         };
 
-        const id = await dexie.user.add(tableRow);
+        const id = await dexie.contacts.add(tableRow);
         return id;
       }
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Error creating contact:', error);
       throw error;
     }
   }
 
   /**
-   * Get user by ID
+   * Get contact by ID
    */
-  async getById(id: number): Promise<User | null> {
+  async getById(id: number): Promise<Contact | null> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeQuery(
-          'SELECT * FROM user WHERE id = ?',
+          'SELECT * FROM contacts WHERE id = ?',
           [id]
         );
         
@@ -109,26 +107,26 @@ export class UserService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        const entity = await dexie.user.get(id);
+        const entity = await dexie.contacts.get(id);
         return entity ? this.mapTableToModel(entity) : null;
       }
     } catch (error) {
-      console.error(`Error getting user by ID ${id}:`, error);
+      console.error(`Error getting contact by ID ${id}:`, error);
       throw error;
     }
   }
 
   /**
-   * Get all user
+   * Get all contacts
    */
-  async getAll(): Promise<User[]> {
+  async getAll(): Promise<Contact[]> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
-        const result = await this.databaseService.executeQuery('SELECT * FROM user');
+        const result = await this.databaseService.executeQuery('SELECT * FROM contacts');
         
         if (result.values && result.values.length > 0) {
-          return result.values.map((entity: UserTable) => this.mapTableToModel(entity));
+          return result.values.map((entity: ContactTable) => this.mapTableToModel(entity));
         }
         return [];
       } else {
@@ -136,19 +134,19 @@ export class UserService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        const entities = await dexie.user.toArray();
-        return entities.map((entity: UserTable) => this.mapTableToModel(entity));
+        const entities = await dexie.contacts.toArray();
+        return entities.map((entity: ContactTable) => this.mapTableToModel(entity));
       }
     } catch (error) {
-      console.error('Error getting all user:', error);
+      console.error('Error getting all contacts:', error);
       throw error;
     }
   }
 
   /**
-   * Update user
+   * Update contact
    */
-  async update(id: number, updates: Partial<User>): Promise<boolean> {
+  async update(id: number, updates: Partial<Contact>): Promise<boolean> {
     try {
       const now = new Date().toISOString();
       const updatedEntity = {
@@ -167,10 +165,10 @@ export class UserService {
           nickname: 'nickname',
           pin: 'pin',
           email: 'email',
+          phoneNumber: 'phone_number',
+          publicKey: 'public_key',
           createdAt: 'created_at',
           updatedAt: 'updated_at',
-          phoneNumber: 'phone_number',
-          privateKey: 'private_key',
         };
 
         for (const [key, value] of Object.entries(updatedEntity)) {
@@ -187,7 +185,7 @@ export class UserService {
 
         // Execute the update query
         const result = await this.databaseService.executeCommand(
-          `UPDATE user SET ${updateFields.join(', ')} WHERE id = ?`,
+          `UPDATE contacts SET ${updateFields.join(', ')} WHERE id = ?`,
           updateValues
         );
 
@@ -203,10 +201,10 @@ export class UserService {
           nickname: 'nickname',
           pin: 'pin',
           email: 'email',
+          phoneNumber: 'phone_number',
+          publicKey: 'public_key',
           createdAt: 'created_at',
           updatedAt: 'updated_at',
-          phoneNumber: 'phone_number',
-          privateKey: 'private_key',
         };
 
         // Transform to snake_case for consistent field names
@@ -220,24 +218,24 @@ export class UserService {
         }
 
         // Update the record
-        await dexie.user.update(id, dexieUpdates);
+        await dexie.contacts.update(id, dexieUpdates);
         return true;
       }
     } catch (error) {
-      console.error(`Error updating user ${id}:`, error);
+      console.error(`Error updating contact ${id}:`, error);
       throw error;
     }
   }
 
   /**
-   * Delete user
+   * Delete contact
    */
   async delete(id: number): Promise<boolean> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeCommand(
-          'DELETE FROM user WHERE id = ?',
+          'DELETE FROM contacts WHERE id = ?',
           [id]
         );
         
@@ -247,11 +245,11 @@ export class UserService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        await dexie.user.delete(id);
+        await dexie.contacts.delete(id);
         return true;
       }
     } catch (error) {
-      console.error(`Error deleting user ${id}:`, error);
+      console.error(`Error deleting contact ${id}:`, error);
       throw error;
     }
   }
@@ -259,16 +257,16 @@ export class UserService {
   /**
    * Map database entity object to model
    */
-  private mapTableToModel(tableRow: UserTable): User {
+  private mapTableToModel(tableRow: ContactTable): Contact {
     return {
       id: tableRow.id,
       nickname: tableRow.nickname,
       pin: tableRow.pin,
       email: tableRow.email,
+      phoneNumber: tableRow.phone_number,
+      publicKey: tableRow.public_key,
       createdAt: tableRow.created_at,
       updatedAt: tableRow.updated_at,
-      phoneNumber: tableRow.phone_number,
-      privateKey: tableRow.private_key,
     };
   }
 }

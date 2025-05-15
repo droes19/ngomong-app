@@ -255,7 +255,7 @@ export class AuthPage implements OnInit {
     // This would be an actual API call in production
     // For simulation purposes, we'll use a timeout and mock response
 
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
       // Simulating API call with timeout
 
       if (type === 'email') {
@@ -274,6 +274,13 @@ export class AuthPage implements OnInit {
           }
         })
       }
+      const alert = await this.alertController.create({
+        header: 'Error',
+        message: 'An error occurred. Please try again later.',
+        buttons: ['OK']
+      });
+      await alert.present()
+      resolve(undefined);
       //setTimeout(() => {
       //  // For demo purposes:
       //  // - test@example.com and 1234567890 are "already registered"

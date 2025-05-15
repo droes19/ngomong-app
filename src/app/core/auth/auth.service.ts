@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { UserService } from '../database/services/user.service';
-import { User } from '../database/models/user.model';
+import { User } from '../database/models/user';
 import { ApiService } from '../api';
 
 @Injectable({
@@ -26,7 +26,7 @@ export class AuthService {
     // For demo purposes, we'll just check if we have users in the database
     // In a real application, you would check for a valid session, token, etc.
     try {
-      const users = await this.userService.getAllUsers();
+      const users = await this.userService.getAll();
       if (users.length > 0) {
         this.currentUser = users[0];
         this.isAuthenticated = true;

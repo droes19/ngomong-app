@@ -1,11 +1,11 @@
-// Auto-generated TypeScript model for the users table
-// Generated on 2025-05-15T02:15:01.113Z
+// Auto-generated TypeScript model for the user table
+// Generated on 2025-05-15T02:51:28.586Z
 // Originally defined in: V1__create_user_table.sql
 
 import { BaseModel, BaseTable } from './base.model';
 
 /**
- * Interface for the users table
+ * Interface for the user table
  */
 export interface User extends BaseModel {
   /** Unique */
@@ -19,7 +19,7 @@ export interface User extends BaseModel {
 }
 
 /**
- * Table interface (snake_case) for the users table
+ * Table interface (snake_case) for the user table
  */
 export interface UserTable extends BaseTable {
   /** Unique */
