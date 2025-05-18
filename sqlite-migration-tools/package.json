@@ -7,7 +7,7 @@
     "sqlite-migrate": "bin/sqlite-migrate.js",
     "sqlite-to-models": "bin/sqlite-to-models.js",
     "sqlite-to-dexie": "bin/sqlite-to-dexie.js",
-    "sqlite-to-services": "bin/sqlite-to-services.js",
+    "sqlite-to-query-services": "bin/sqlite-to-query-services.js",
     "sqlite-run-all": "bin/sqlite-run-all.js"
   },
   "scripts": {
@@ -16,7 +16,7 @@
     "generate-migrations": "node bin/sqlite-migrate.js --dir ../migrations",
     "generate-models": "node bin/sqlite-to-models.js --dir ../migrations",
     "generate-dexie": "node bin/sqlite-to-dexie.js --dir ../migrations",
-    "generate-services": "node bin/sqlite-to-services.js --dir ../migrations",
+    "generate-query-services": "node bin/sqlite-to-query-services.js --dir ../queries ../migrations",
     "generate-all-numeric": "node bin/sqlite-run-all.js --numeric ../migrations"
   },
   "keywords": [

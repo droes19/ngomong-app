@@ -2,7 +2,7 @@
 const migrateGenerator = require('./migrate-generator');
 const modelGenerator = require('./model-generator');
 const dexieGenerator = require('./dexie-generator');
-const serviceGenerator = require('./service-generator');
+const queryServiceGenerator = require('./query-service-generator');
 
 module.exports = {
   // SQLite migrations generator
@@ -17,7 +17,7 @@ module.exports = {
   generateDexieMigrationFromDir: dexieGenerator.generateDexieMigrationFromDir,
   generateDexieMigrationFromFile: dexieGenerator.generateDexieMigrationFromFile,
 
-  // Service generator
-  processMigrationDirectoryForServices: serviceGenerator.processMigrationDirectoryForServices,
-  processFileForServices: serviceGenerator.processFileForServices
+  // Query service generator
+  processQueryDirectory: queryServiceGenerator.processQueryDirectory,
+  processQueryFile: queryServiceGenerator.processQueryFile,
 };

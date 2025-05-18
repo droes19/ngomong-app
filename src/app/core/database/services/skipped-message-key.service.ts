@@ -1,25 +1,25 @@
-// Auto-generated TypeScript service for the contacts table
-// Generated on 2025-05-17T23:51:52.205Z
-// Originally defined in: V2__create_contact_table.sql
+// Auto-generated TypeScript service for the skipped_message_keys table
+// Generated on 2025-05-17T23:51:52.275Z
+// Originally defined in: V4__create_skipped_message_key_table.sql
 // Custom queries from SQL files
 
 import { Injectable } from '@angular/core';
 import { DatabaseService } from './database.service';
-import { Contact, ContactTable } from '../models/contact';
+import { SkippedMessageKey, SkippedMessageKeyTable } from '../models/skipped-message-key';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ContactService {
+export class SkippedMessageKeyService {
   constructor(private databaseService: DatabaseService) {}
 
   /**
-   * Create a new contact
+   * Create a new skippedmessagekey
    */
-  async create(contact: Contact): Promise<string | undefined> {
+  async create(skippedmessagekey: SkippedMessageKey): Promise<number | undefined> {
     const now = new Date().toISOString();
     const entityToInsert = {
-      ...contact,
+      ...skippedmessagekey,
       createdAt: now,
       updatedAt: now
     };
@@ -27,44 +27,30 @@ export class ContactService {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // Convert model to snake_case for SQL database
-        const tableRow: ContactTable = {
-          id: entityToInsert.id,
-          nickname: entityToInsert.nickname,
-          pin: entityToInsert.pin,
-          email: entityToInsert.email,
-          phone_number: entityToInsert.phoneNumber,
-          identity_public_key: entityToInsert.identityPublicKey,
-          status: entityToInsert.status,
-          avatar_path: entityToInsert.avatarPath,
+        const tableRow: SkippedMessageKeyTable = {
+          id: entityToInsert.id || 0,
+          session_id: entityToInsert.sessionId,
+          ratchet_key: entityToInsert.ratchetKey,
+          counter: entityToInsert.counter,
+          message_key: entityToInsert.messageKey,
           created_at: entityToInsert.createdAt,
-          updated_at: entityToInsert.updatedAt,
         };
 
         // SQLite implementation
         const result = await this.databaseService.executeCommand(
-          `INSERT INTO contacts (
-            id,
-            nickname,
-            pin,
-            email,
-            phone_number,
-            identity_public_key,
-            status,
-            avatar_path,
-            created_at,
-            updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO skipped_message_keys (
+            session_id,
+            ratchet_key,
+            counter,
+            message_key,
+            created_at
+          ) VALUES (?, ?, ?, ?, ?)`,
           [
-            tableRow.id,
-            tableRow.nickname,
-            tableRow.pin || null,
-            tableRow.email || null,
-            tableRow.phone_number || null,
-            tableRow.identity_public_key,
-            tableRow.status || null,
-            tableRow.avatar_path || null,
-            tableRow.created_at,
-            tableRow.updated_at
+            tableRow.session_id,
+            tableRow.ratchet_key,
+            tableRow.counter,
+            tableRow.message_key,
+            tableRow.created_at
           ]
         );
 
@@ -75,37 +61,33 @@ export class ContactService {
         if (!dexie) throw new Error('Dexie database not initialized');
 
         // Convert model to table format for storage
-        const tableRow: ContactTable = {
-          id: entityToInsert.id,
-          nickname: entityToInsert.nickname,
-          pin: entityToInsert.pin,
-          email: entityToInsert.email,
-          phone_number: entityToInsert.phoneNumber,
-          identity_public_key: entityToInsert.identityPublicKey,
-          status: entityToInsert.status,
-          avatar_path: entityToInsert.avatarPath,
+        const tableRow: SkippedMessageKeyTable = {
+          id: entityToInsert.id || 0,
+          session_id: entityToInsert.sessionId,
+          ratchet_key: entityToInsert.ratchetKey,
+          counter: entityToInsert.counter,
+          message_key: entityToInsert.messageKey,
           created_at: entityToInsert.createdAt,
-          updated_at: entityToInsert.updatedAt,
         };
 
-        const id = await dexie.contacts.add(tableRow);
+        const id = await dexie.skipped_message_keys.add(tableRow);
         return id;
       }
     } catch (error) {
-      console.error('Error creating contact:', error);
+      console.error('Error creating skippedmessagekey:', error);
       throw error;
     }
   }
 
   /**
-   * Get contact by ID
+   * Get skippedmessagekey by ID
    */
-  async getById(id: string): Promise<Contact | null> {
+  async getById(id: number): Promise<SkippedMessageKey | null> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeQuery(
-          'SELECT * FROM contacts WHERE id = ?',
+          'SELECT * FROM skipped_message_keys WHERE id = ?',
           [id]
         );
         
@@ -118,26 +100,26 @@ export class ContactService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        const entity = await dexie.contacts.get(id);
+        const entity = await dexie.skipped_message_keys.get(id);
         return entity ? this.mapTableToModel(entity) : null;
       }
     } catch (error) {
-      console.error(`Error getting contact by ID ${id}:`, error);
+      console.error(`Error getting skippedmessagekey by ID ${id}:`, error);
       throw error;
     }
   }
 
   /**
-   * Get all contacts
+   * Get all skipped_message_keys
    */
-  async getAll(): Promise<Contact[]> {
+  async getAll(): Promise<SkippedMessageKey[]> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
-        const result = await this.databaseService.executeQuery('SELECT * FROM contacts');
+        const result = await this.databaseService.executeQuery('SELECT * FROM skipped_message_keys');
         
         if (result.values && result.values.length > 0) {
-          return result.values.map((entity: ContactTable) => this.mapTableToModel(entity));
+          return result.values.map((entity: SkippedMessageKeyTable) => this.mapTableToModel(entity));
         }
         return [];
       } else {
@@ -145,19 +127,19 @@ export class ContactService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        const entities = await dexie.contacts.toArray();
-        return entities.map((entity: ContactTable) => this.mapTableToModel(entity));
+        const entities = await dexie.skipped_message_keys.toArray();
+        return entities.map((entity: SkippedMessageKeyTable) => this.mapTableToModel(entity));
       }
     } catch (error) {
-      console.error('Error getting all contacts:', error);
+      console.error('Error getting all skipped_message_keys:', error);
       throw error;
     }
   }
 
   /**
-   * Update contact
+   * Update skippedmessagekey
    */
-  async update(id: string, updates: Partial<Contact>): Promise<boolean> {
+  async update(id: number, updates: Partial<SkippedMessageKey>): Promise<boolean> {
     try {
       const now = new Date().toISOString();
       const updatedEntity = {
@@ -173,15 +155,11 @@ export class ContactService {
         // Map of camelCase property names to database snake_case column names
         const fieldMappings: Record<string, string> = {
           id: 'id',
-          nickname: 'nickname',
-          pin: 'pin',
-          email: 'email',
-          phoneNumber: 'phone_number',
-          identityPublicKey: 'identity_public_key',
-          status: 'status',
-          avatarPath: 'avatar_path',
+          sessionId: 'session_id',
+          ratchetKey: 'ratchet_key',
+          counter: 'counter',
+          messageKey: 'message_key',
           createdAt: 'created_at',
-          updatedAt: 'updated_at',
         };
 
         for (const [key, value] of Object.entries(updatedEntity)) {
@@ -198,7 +176,7 @@ export class ContactService {
 
         // Execute the update query
         const result = await this.databaseService.executeCommand(
-          `UPDATE contacts SET ${updateFields.join(', ')} WHERE id = ?`,
+          `UPDATE skipped_message_keys SET ${updateFields.join(', ')} WHERE id = ?`,
           updateValues
         );
 
@@ -211,15 +189,11 @@ export class ContactService {
         // Map of camelCase property names to database snake_case column names
         const fieldMappings: Record<string, string> = {
           id: 'id',
-          nickname: 'nickname',
-          pin: 'pin',
-          email: 'email',
-          phoneNumber: 'phone_number',
-          identityPublicKey: 'identity_public_key',
-          status: 'status',
-          avatarPath: 'avatar_path',
+          sessionId: 'session_id',
+          ratchetKey: 'ratchet_key',
+          counter: 'counter',
+          messageKey: 'message_key',
           createdAt: 'created_at',
-          updatedAt: 'updated_at',
         };
 
         // Transform to snake_case for consistent field names
@@ -233,24 +207,24 @@ export class ContactService {
         }
 
         // Update the record
-        await dexie.contacts.update(id, dexieUpdates);
+        await dexie.skipped_message_keys.update(id, dexieUpdates);
         return true;
       }
     } catch (error) {
-      console.error(`Error updating contact ${id}:`, error);
+      console.error(`Error updating skippedmessagekey ${id}:`, error);
       throw error;
     }
   }
 
   /**
-   * Delete contact
+   * Delete skippedmessagekey
    */
-  async delete(id: string): Promise<boolean> {
+  async delete(id: number): Promise<boolean> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeCommand(
-          'DELETE FROM contacts WHERE id = ?',
+          'DELETE FROM skipped_message_keys WHERE id = ?',
           [id]
         );
         
@@ -260,11 +234,11 @@ export class ContactService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        await dexie.contacts.delete(id);
+        await dexie.skipped_message_keys.delete(id);
         return true;
       }
     } catch (error) {
-      console.error(`Error deleting contact ${id}:`, error);
+      console.error(`Error deleting skippedmessagekey ${id}:`, error);
       throw error;
     }
   }
@@ -280,7 +254,7 @@ export class ContactService {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeQuery(
-          `SELECT COUNT(*) as total FROM contacts;`,
+          `SELECT COUNT(*) as total FROM skipped_message_keys;`,
           []
         );
 
@@ -293,7 +267,7 @@ export class ContactService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
 
-        const count = await dexie.contacts.count();
+        const count = await dexie.skipped_message_keys.count();
         return [{ total: count }];
       }
     } catch (error) {
@@ -305,40 +279,28 @@ export class ContactService {
   /**
    * Map database entity object to model
    */
-  private mapTableToModel(tableRow: ContactTable): Contact {
+  private mapTableToModel(tableRow: SkippedMessageKeyTable): SkippedMessageKey {
     // Filter out any undefined fields or SQL functions
     const model: any = {};
 
     if (tableRow.id !== undefined) {
       model.id = tableRow.id;
     }
-    if (tableRow.nickname !== undefined) {
-      model.nickname = tableRow.nickname;
+    if (tableRow.session_id !== undefined) {
+      model.sessionId = tableRow.session_id;
     }
-    if (tableRow.pin !== undefined) {
-      model.pin = tableRow.pin;
+    if (tableRow.ratchet_key !== undefined) {
+      model.ratchetKey = tableRow.ratchet_key;
     }
-    if (tableRow.email !== undefined) {
-      model.email = tableRow.email;
+    if (tableRow.counter !== undefined) {
+      model.counter = tableRow.counter;
     }
-    if (tableRow.phone_number !== undefined) {
-      model.phoneNumber = tableRow.phone_number;
-    }
-    if (tableRow.identity_public_key !== undefined) {
-      model.identityPublicKey = tableRow.identity_public_key;
-    }
-    if (tableRow.status !== undefined) {
-      model.status = tableRow.status;
-    }
-    if (tableRow.avatar_path !== undefined) {
-      model.avatarPath = tableRow.avatar_path;
+    if (tableRow.message_key !== undefined) {
+      model.messageKey = tableRow.message_key;
     }
     if (tableRow.created_at !== undefined) {
       model.createdAt = tableRow.created_at;
     }
-    if (tableRow.updated_at !== undefined) {
-      model.updatedAt = tableRow.updated_at;
-    }
-    return model as Contact;
+    return model as SkippedMessageKey;
   }
 }

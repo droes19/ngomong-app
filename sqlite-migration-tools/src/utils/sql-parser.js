@@ -7,45 +7,145 @@ const { sqliteToTypeScriptType } = require('./type-mapping');
  */
 const formatSqlQuery = (query) => {
   return query
-    .trim()                        // Remove leading/trailing whitespace
-    .replace(/\n\s+/g, '\n  ')     // Normalize indentation to 2 spaces
-    .replace(/\s+/g, ' ')          // Replace multiple spaces with a single space
-    .replace(/\s*\(\s*/g, ' (')    // Normalize spacing around parentheses
+    .trim()
+    .replace(/\n\s+/g, '\n  ')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*\(\s*/g, ' (')
     .replace(/\s*\)\s*/g, ') ')
-    .replace(/\s*,\s*/g, ', ')     // Normalize spacing around commas
-    .replace(/\s+/g, ' ')          // Final cleanup of any remaining multiple spaces
-    .trim();                        // Final trim
+    .replace(/\s*,\s*/g, ', ')
+    .replace(/\s+/g, ' ')
+    .trim();
 };
 
 /**
- * Extract SQL queries from a migration file
+ * Extract SQL queries from a migration file with special trigger handling
  * @param {string} content SQL file content
  * @returns {string[]} Array of SQL queries
  */
 const extractQueriesFromContent = (content) => {
   if (!content) return [];
 
-  // Split content by semicolons to get individual queries
-  // Then filter out empty queries and comments
-  const queries = content
-    .split(';')
-    .map(query => query.trim())
+  // Normalize line endings
+  content = content.replace(/\r\n/g, '\n');
+
+  // Split by semicolons but maintain a stack to track BEGIN/END blocks
+  const queries = [];
+  let currentQuery = '';
+  let inTriggerBlock = false;
+
+  // Split into lines first to better track the structure
+  const lines = content.split('\n');
+
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+
+    // Skip empty lines and comment-only lines
+    if (!trimmedLine || trimmedLine.startsWith('--')) {
+      continue;
+    }
+
+    // Check if we're entering a trigger block
+    if (trimmedLine.includes('CREATE TRIGGER') && trimmedLine.includes('BEGIN')) {
+      inTriggerBlock = true;
+    } else if (!inTriggerBlock && trimmedLine.includes('CREATE TRIGGER')) {
+      inTriggerBlock = true;
+    } else if (inTriggerBlock && trimmedLine.includes('END;')) {
+      inTriggerBlock = false;
+      // Add the line with END to the current query
+      currentQuery += line + '\n';
+
+      // Finish this query
+      if (currentQuery.trim()) {
+        queries.push(formatSqlQuery(currentQuery));
+        currentQuery = '';
+      }
+      continue;
+    }
+
+    // Add current line to the query
+    currentQuery += line + '\n';
+
+    // If we're not in a trigger block and the line ends with a semicolon, we've reached the end of a query
+    if (!inTriggerBlock && trimmedLine.endsWith(';')) {
+      if (currentQuery.trim()) {
+        queries.push(formatSqlQuery(currentQuery));
+        currentQuery = '';
+      }
+    }
+  }
+
+  // Add any remaining query
+  if (currentQuery.trim()) {
+    queries.push(formatSqlQuery(currentQuery));
+  }
+
+  return queries
     .filter(query => {
-      // Filter out empty queries
-      if (!query) return false;
-
-      // Filter out comment-only queries
+      // Remove any remaining empty queries
       const withoutComments = query
-        .replace(/--.*$/gm, '')  // Remove single-line comments
-        .replace(/\/\*[\s\S]*?\*\//g, '')  // Remove multi-line comments
+        .replace(/--.*$/gm, '')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
         .trim();
-
       return withoutComments.length > 0;
-    })
-    .map(query => formatSqlQuery(query));
-
-  return queries;
+    });
 };
+
+/**
+ * Helper function to split a string by commas while respecting parentheses and quotes
+ * @param {string} input Input string
+ * @returns {string[]} Array of split parts
+ */
+function splitRespectingParentheses(input) {
+  const result = [];
+  let current = '';
+  let parenLevel = 0;
+  let inQuotes = false;
+  let quoteChar = '';
+  
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+    
+    // Handle quotes
+    if ((char === '"' || char === "'" || char === '`') && (i === 0 || input[i-1] !== '\\')) {
+      if (inQuotes && char === quoteChar) {
+        inQuotes = false;
+      } else if (!inQuotes) {
+        inQuotes = true;
+        quoteChar = char;
+      }
+      current += char;
+      continue;
+    }
+    
+    // Handle parentheses - only if not in quotes
+    if (!inQuotes) {
+      if (char === '(') {
+        parenLevel++;
+        current += char;
+        continue;
+      } else if (char === ')') {
+        parenLevel--;
+        current += char;
+        continue;
+      }
+    }
+    
+    // Handle commas - only split if not in quotes or parentheses
+    if (char === ',' && parenLevel === 0 && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  
+  // Don't forget the last part
+  if (current.trim()) {
+    result.push(current.trim());
+  }
+  
+  return result;
+}
 
 /**
  * Parse CREATE TABLE statements from SQL content
@@ -56,16 +156,66 @@ const extractQueriesFromContent = (content) => {
 const parseCreateTableStatements = (sqlContent, fileName) => {
   const tables = [];
   const enums = [];
-  const createTableRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?["'`]?(\w+)["'`]?\s*\(([\s\S]*?)\)/gmi;
+
+  // Modified regex to match CREATE TABLE statements with table name capture
+  const createTableStartRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?["'`]?(\w+)["'`]?/gmi;
 
   let match;
-  while ((match = createTableRegex.exec(sqlContent)) !== null) {
+  while ((match = createTableStartRegex.exec(sqlContent)) !== null) {
     const tableName = match[1];
-    const tableContentStr = match[2];
+    const matchStart = match.index;
+    
+    // Find the opening parenthesis
+    let openParenPos = sqlContent.indexOf('(', matchStart + match[0].length);
+    if (openParenPos === -1) {
+      console.error(`Error: Could not find opening parenthesis for table ${tableName}`);
+      continue;
+    }
+    
+    // Find the matching closing parenthesis, accounting for nested parentheses
+    let endPos = openParenPos + 1;
+    let parenLevel = 1;
+    let inQuotes = false;
+    let quoteChar = '';
+    
+    while (endPos < sqlContent.length && parenLevel > 0) {
+      const char = sqlContent[endPos];
+      
+      // Handle quotes
+      if ((char === '"' || char === "'" || char === '`') && (endPos === 0 || sqlContent[endPos-1] !== '\\')) {
+        if (inQuotes && char === quoteChar) {
+          inQuotes = false;
+        } else if (!inQuotes) {
+          inQuotes = true;
+          quoteChar = char;
+        }
+      }
+      
+      // Handle parentheses - only if not in quotes
+      if (!inQuotes) {
+        if (char === '(') {
+          parenLevel++;
+        } else if (char === ')') {
+          parenLevel--;
+        }
+      }
+      
+      endPos++;
+    }
+    
+    // Extract the full table content between the parentheses
+    if (endPos <= openParenPos + 1 || parenLevel > 0) {
+      console.error(`Error: Could not find closing parenthesis for table ${tableName}`);
+      continue; // Skip this table if we couldn't find the closing parenthesis
+    }
+    
+    const tableContentStr = sqlContent.substring(openParenPos + 1, endPos - 1);
 
     // Parse columns
     const columns = [];
-    const columnMatches = tableContentStr.split(',');
+    
+    // Split by commas, respecting parentheses
+    const columnMatches = splitRespectingParentheses(tableContentStr);
 
     // For the foreign keys list
     const foreignKeys = [];
@@ -76,11 +226,13 @@ const parseCreateTableStatements = (sqlContent, fileName) => {
     // For tracking indexed columns (for Dexie schema)
     const indexedColumns = [];
 
-    columnMatches.forEach(columnStr => {
+    columnMatches.forEach((columnStr) => {
       columnStr = columnStr.trim();
 
       // Skip if empty
-      if (!columnStr) return;
+      if (!columnStr) {
+        return;
+      }
 
       // Handle FOREIGN KEY constraints
       if (columnStr.toUpperCase().startsWith('FOREIGN KEY')) {
@@ -119,12 +271,13 @@ const parseCreateTableStatements = (sqlContent, fileName) => {
       }
 
       // Parse regular column definitions
-      const colMatch = columnStr.match(/["'`]?(\w+)["'`]?\s+([^,]+)/);
+      const colMatch = columnStr.match(/["'`]?(\w+)["'`]?\s+([^]+)/);
       if (colMatch) {
         const columnName = colMatch[1];
         const columnDef = colMatch[2].trim();
 
-        const typeParts = columnDef.split(' ');
+        // Get the SQL type from the first word
+        const typeParts = columnDef.split(/\s+/);
         const sqlType = typeParts[0];
 
         const tsType = sqliteToTypeScriptType(sqlType);
@@ -132,6 +285,19 @@ const parseCreateTableStatements = (sqlContent, fileName) => {
         const isNotNull = columnDef.toUpperCase().includes('NOT NULL');
         const isUnique = columnDef.toUpperCase().includes('UNIQUE');
         const isAutoIncrement = columnDef.toUpperCase().includes('AUTOINCREMENT');
+
+        // Extract DEFAULT value, handling complex expressions with parentheses
+        let defaultValue;
+        
+        // Handle cases with nested parentheses like DEFAULT (datetime ('now', 'localtime'))
+        const defaultMatch = columnDef.match(/DEFAULT\s+(.+)$/i);
+        if (defaultMatch) {
+          defaultValue = defaultMatch[1].trim();
+        }
+
+        if (isPrimaryKey) {
+          primaryKeyColumns.push(columnName);
+        }
 
         // In Dexie, PRIMARY KEY columns and UNIQUE columns should be indexed
         if (isPrimaryKey || isUnique) {
@@ -143,17 +309,6 @@ const parseCreateTableStatements = (sqlContent, fileName) => {
         // Also add foreign key-like columns (ending with _id) to indexedColumns
         if (columnName.endsWith('_id') && !indexedColumns.includes(columnName)) {
           indexedColumns.push(columnName);
-        }
-
-        // Look for DEFAULT value
-        let defaultValue;
-        const defaultMatch = columnDef.match(/DEFAULT\s+([^,\s]+)/i);
-        if (defaultMatch) {
-          defaultValue = defaultMatch[1];
-        }
-
-        if (isPrimaryKey) {
-          primaryKeyColumns.push(columnName);
         }
 
         columns.push({
@@ -190,7 +345,7 @@ const parseCreateTableStatements = (sqlContent, fileName) => {
         valueCol: nameColumn ? nameColumn.name : 'name'
       });
     }
-
+    
     tables.push({
       name: tableName,
       columns: columns,
@@ -206,11 +361,11 @@ const parseCreateTableStatements = (sqlContent, fileName) => {
 /**
  * Parse ALTER TABLE statements from SQL content
  * @param {string} sqlContent SQL content to parse
- * @param {Array} existingTables Array of existing table definitions
+ * @param {object} schemaInfo Schema information containing tables and enums
  * @param {string} fileName Name of the source file (for reference)
  * @returns {Array} Array of alteration objects
  */
-const parseAlterTableStatements = (sqlContent, existingTables, fileName) => {
+function parseAlterTableStatements(sqlContent, schemaInfo, fileName) {
   // Pattern for ALTER TABLE ADD COLUMN statements
   const addColumnRegex = /ALTER\s+TABLE\s+["'`]?(\w+)["'`]?\s+ADD(?:\s+COLUMN)?\s+["'`]?(\w+)["'`]?\s+([^;]+)/gmi;
 
@@ -250,6 +405,16 @@ const parseAlterTableStatements = (sqlContent, existingTables, fileName) => {
       defaultValue: defaultValue
     };
 
+    // Check if column already exists in alterations before adding
+    const existingAlteration = alterations.find(
+      alt => alt.tableName === tableName && alt.columnName === columnName
+    );
+
+    if (existingAlteration) {
+      console.warn(`Warning: Duplicate ALTER TABLE for column ${tableName}.${columnName} in file ${fileName}. Skipping duplicate.`);
+      continue;
+    }
+
     // Store the alteration for later processing
     alterations.push({
       tableName,
@@ -257,20 +422,25 @@ const parseAlterTableStatements = (sqlContent, existingTables, fileName) => {
       columnInfo
     });
 
-    console.log(`Found ALTER TABLE: Add column ${columnName} to table ${tableName} in file ${fileName}`);
-
     // Find the table in existing tables to apply immediately for compatibility
     let table = null;
 
-    if (Array.isArray(existingTables)) {
-      table = existingTables.find(t => t.name === tableName);
-    } else if (existingTables && existingTables.tables && existingTables.tables[tableName]) {
-      table = existingTables.tables[tableName];
+    if (Array.isArray(schemaInfo)) {
+      table = schemaInfo.find(t => t.name === tableName);
+    } else if (schemaInfo && schemaInfo.tables && schemaInfo.tables[tableName]) {
+      table = schemaInfo.tables[tableName];
     }
 
     // Skip if the table doesn't exist in our schema
     if (!table) {
       console.warn(`Warning: ALTER TABLE references table "${tableName}" which was not found in the current file. This will be applied in version processing if the table exists in a previous version.`);
+      continue;
+    }
+
+    // Check if column already exists in table before adding
+    const existingColumn = table.columns.find(col => col.name === columnName);
+    if (existingColumn) {
+      console.warn(`Warning: Column ${columnName} already exists in table ${tableName}. Skipping duplicate ALTER TABLE statement.`);
       continue;
     }
 
@@ -301,7 +471,97 @@ const parseAlterTableStatements = (sqlContent, existingTables, fileName) => {
   }
 
   return alterations;
-};
+}
+
+/**
+ * Generate Dexie schema string for a table
+ * @param {object} table Table definition
+ * @returns {string} Dexie schema string
+ */
+function generateDexieSchemaString(table) {
+  // Get primary key
+  const primaryKey = table.columns.find(col => col.isPrimaryKey);
+  let schemaString = '';
+
+  if (primaryKey) {
+    // If it's auto-increment, prefix with ++
+    if (primaryKey.isAutoIncrement) {
+      schemaString = `++${primaryKey.name}`;
+    } else {
+      schemaString = primaryKey.name;
+    }
+  } else {
+    // If no primary key, use auto-incrementing id
+    schemaString = '++id';
+  }
+
+  // Add all indexed columns and column names that should be indexed
+  const indexedColumns = new Set();
+
+  // Add explicitly indexed columns
+  if (Array.isArray(table.indexedColumns)) {
+    table.indexedColumns.forEach(col => indexedColumns.add(col));
+  }
+
+  // Common fields that typically don't need indexing
+  const commonFields = new Set([
+    'created_at',
+    'updated_at',
+    'created_by',
+    'updated_by',
+    'deleted_at',
+    'description',
+    'content',
+    'notes',
+    'comments'
+  ]);
+
+  // Add all columns except common fields
+  table.columns.forEach(col => {
+    // Skip primary key (already handled above)
+    if (col.isPrimaryKey) {
+      return;
+    }
+
+    // Skip common fields that typically don't need indexing
+    if (commonFields.has(col.name)) {
+      return;
+    }
+
+    // Always index fields that:
+    // 1. Are marked as unique
+    // 2. End with _id (likely foreign keys)
+    // 3. Have common indexable names (email, username, etc.)
+    // 4. Are not large text fields (likely to be queried)
+    const isUnique = col.isUnique;
+    const isForeignKey = col.name.endsWith('_id');
+    const isCommonIndexable = ['email', 'username', 'phone_number', 'private_key', 'api_key', 'code', 'status'].includes(col.name);
+    const isLargeTextField = col.tsType === 'string' && (
+      col.name.includes('description') ||
+      col.name.includes('content') ||
+      col.name.includes('text') ||
+      col.name.includes('body')
+    );
+
+    if (isUnique || isForeignKey || isCommonIndexable || !isLargeTextField) {
+      indexedColumns.add(col.name);
+    }
+  });
+
+  // Remove the primary key from indexed columns
+  if (primaryKey) {
+    indexedColumns.delete(primaryKey.name);
+  }
+
+  // Convert Set to sorted array for consistent output
+  const sortedIndexedColumns = Array.from(indexedColumns).sort();
+
+  if (sortedIndexedColumns.length > 0) {
+    schemaString += ', ' + sortedIndexedColumns.join(', ');
+  }
+
+  return schemaString;
+}
 
 /**
  * Convert a table name to a TypeScript interface name
@@ -338,100 +598,14 @@ const interfaceNameToFileName = (interfaceName) => {
 };
 
 /**
- * Generate Dexie schema string for a table
- * @param {object} table Table definition
- * @returns {string} Dexie schema string
+ * Check if a field name is valid
+ * @param {string} fieldName Field name to check
+ * @returns {boolean} Whether the field name is valid
  */
-function generateDexieSchemaString(table) {
-  // Get primary key
-  const primaryKey = table.columns.find(col => col.isPrimaryKey);
-  let schemaString = '';
-
-  if (primaryKey) {
-    // If it's auto-increment, prefix with ++
-    if (primaryKey.isAutoIncrement) {
-      schemaString = `++${primaryKey.name}`;
-    } else {
-      schemaString = primaryKey.name;
-    }
-  } else {
-    // If no primary key, use auto-incrementing id
-    schemaString = '++id';
-  }
-
-  // For debugging
-  console.log(`Generating Dexie schema for table ${table.name}`);
-  console.log(`Table columns: ${table.columns.map(c => c.name).join(', ')}`);
-  
-  // Add all indexed columns and column names that should be indexed
-  const indexedColumns = new Set();
-
-  // Add explicitly indexed columns
-  if (Array.isArray(table.indexedColumns)) {
-    table.indexedColumns.forEach(col => indexedColumns.add(col));
-  }
-
-  // Common fields that typically don't need indexing
-  const commonFields = new Set([
-    'created_at', 
-    'updated_at', 
-    'created_by',
-    'updated_by',
-    'deleted_at', 
-    'description',
-    'content',
-    'notes',
-    'comments'
-  ]);
-
-  // Add all columns except common fields
-  table.columns.forEach(col => {
-    // Skip primary key (already handled above)
-    if (col.isPrimaryKey) {
-      return;
-    }
-    
-    // Skip common fields that typically don't need indexing
-    if (commonFields.has(col.name)) {
-      return;
-    }
-    
-    // Always index fields that:
-    // 1. Are marked as unique
-    // 2. End with _id (likely foreign keys)
-    // 3. Have common indexable names (email, username, etc.)
-    // 4. Are not large text fields (likely to be queried)
-    const isUnique = col.isUnique;
-    const isForeignKey = col.name.endsWith('_id');
-    const isCommonIndexable = ['email', 'username', 'phone_number', 'private_key', 'api_key', 'code', 'status'].includes(col.name);
-    const isLargeTextField = col.tsType === 'string' && (
-      col.name.includes('description') || 
-      col.name.includes('content') || 
-      col.name.includes('text') || 
-      col.name.includes('body')
-    );
-    
-    if (isUnique || isForeignKey || isCommonIndexable || !isLargeTextField) {
-      indexedColumns.add(col.name);
-    }
-  });
-
-  // Remove the primary key from indexed columns
-  if (primaryKey) {
-    indexedColumns.delete(primaryKey.name);
-  }
-
-  // Convert Set to sorted array for consistent output
-  const sortedIndexedColumns = Array.from(indexedColumns).sort();
-
-  console.log(`Indexed columns for ${table.name}: ${sortedIndexedColumns.join(', ')}`);
-
-  if (sortedIndexedColumns.length > 0) {
-    schemaString += ', ' + sortedIndexedColumns.join(', ');
-  }
-
-  return schemaString;
-}
+const isValidFieldName = (fieldName) => {
+  // Check if it's a valid JavaScript identifier
+  return /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(fieldName);
+};
 
 module.exports = {
   formatSqlQuery,
@@ -440,5 +614,7 @@ module.exports = {
   parseAlterTableStatements,
   tableNameToInterfaceName,
   interfaceNameToFileName,
+  isValidFieldName,
+  splitRespectingParentheses,
   generateDexieSchemaString
 };

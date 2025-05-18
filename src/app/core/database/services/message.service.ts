@@ -1,25 +1,25 @@
-// Auto-generated TypeScript service for the contacts table
-// Generated on 2025-05-17T23:51:52.205Z
-// Originally defined in: V2__create_contact_table.sql
+// Auto-generated TypeScript service for the messages table
+// Generated on 2025-05-17T23:51:52.233Z
+// Originally defined in: V6__create_message_table.sql
 // Custom queries from SQL files
 
 import { Injectable } from '@angular/core';
 import { DatabaseService } from './database.service';
-import { Contact, ContactTable } from '../models/contact';
+import { Message, MessageTable } from '../models/message';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ContactService {
+export class MessageService {
   constructor(private databaseService: DatabaseService) {}
 
   /**
-   * Create a new contact
+   * Create a new message
    */
-  async create(contact: Contact): Promise<string | undefined> {
+  async create(message: Message): Promise<number | undefined> {
     const now = new Date().toISOString();
     const entityToInsert = {
-      ...contact,
+      ...message,
       createdAt: now,
       updatedAt: now
     };
@@ -27,44 +27,45 @@ export class ContactService {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // Convert model to snake_case for SQL database
-        const tableRow: ContactTable = {
-          id: entityToInsert.id,
-          nickname: entityToInsert.nickname,
-          pin: entityToInsert.pin,
-          email: entityToInsert.email,
-          phone_number: entityToInsert.phoneNumber,
-          identity_public_key: entityToInsert.identityPublicKey,
+        const tableRow: MessageTable = {
+          id: entityToInsert.id || 0,
+          conversation_id: entityToInsert.conversationId,
+          session_id: entityToInsert.sessionId,
+          message_type: entityToInsert.messageType,
+          content: entityToInsert.content,
+          sender_id: entityToInsert.senderId,
+          sent: entityToInsert.sent,
+          sent_timestamp: entityToInsert.sentTimestamp,
+          delivered_timestamp: entityToInsert.deliveredTimestamp,
+          read_timestamp: entityToInsert.readTimestamp,
           status: entityToInsert.status,
-          avatar_path: entityToInsert.avatarPath,
-          created_at: entityToInsert.createdAt,
-          updated_at: entityToInsert.updatedAt,
         };
 
         // SQLite implementation
         const result = await this.databaseService.executeCommand(
-          `INSERT INTO contacts (
-            id,
-            nickname,
-            pin,
-            email,
-            phone_number,
-            identity_public_key,
-            status,
-            avatar_path,
-            created_at,
-            updated_at
+          `INSERT INTO messages (
+            conversation_id,
+            session_id,
+            message_type,
+            content,
+            sender_id,
+            sent,
+            sent_timestamp,
+            delivered_timestamp,
+            read_timestamp,
+            status
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
-            tableRow.id,
-            tableRow.nickname,
-            tableRow.pin || null,
-            tableRow.email || null,
-            tableRow.phone_number || null,
-            tableRow.identity_public_key,
-            tableRow.status || null,
-            tableRow.avatar_path || null,
-            tableRow.created_at,
-            tableRow.updated_at
+            tableRow.conversation_id,
+            tableRow.session_id,
+            tableRow.message_type,
+            tableRow.content,
+            tableRow.sender_id || null,
+            tableRow.sent,
+            tableRow.sent_timestamp || null,
+            tableRow.delivered_timestamp || null,
+            tableRow.read_timestamp || null,
+            tableRow.status
           ]
         );
 
@@ -75,37 +76,38 @@ export class ContactService {
         if (!dexie) throw new Error('Dexie database not initialized');
 
         // Convert model to table format for storage
-        const tableRow: ContactTable = {
-          id: entityToInsert.id,
-          nickname: entityToInsert.nickname,
-          pin: entityToInsert.pin,
-          email: entityToInsert.email,
-          phone_number: entityToInsert.phoneNumber,
-          identity_public_key: entityToInsert.identityPublicKey,
+        const tableRow: MessageTable = {
+          id: entityToInsert.id || 0,
+          conversation_id: entityToInsert.conversationId,
+          session_id: entityToInsert.sessionId,
+          message_type: entityToInsert.messageType,
+          content: entityToInsert.content,
+          sender_id: entityToInsert.senderId,
+          sent: entityToInsert.sent,
+          sent_timestamp: entityToInsert.sentTimestamp,
+          delivered_timestamp: entityToInsert.deliveredTimestamp,
+          read_timestamp: entityToInsert.readTimestamp,
           status: entityToInsert.status,
-          avatar_path: entityToInsert.avatarPath,
-          created_at: entityToInsert.createdAt,
-          updated_at: entityToInsert.updatedAt,
         };
 
-        const id = await dexie.contacts.add(tableRow);
+        const id = await dexie.messages.add(tableRow);
         return id;
       }
     } catch (error) {
-      console.error('Error creating contact:', error);
+      console.error('Error creating message:', error);
       throw error;
     }
   }
 
   /**
-   * Get contact by ID
+   * Get message by ID
    */
-  async getById(id: string): Promise<Contact | null> {
+  async getById(id: number): Promise<Message | null> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeQuery(
-          'SELECT * FROM contacts WHERE id = ?',
+          'SELECT * FROM messages WHERE id = ?',
           [id]
         );
         
@@ -118,26 +120,26 @@ export class ContactService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        const entity = await dexie.contacts.get(id);
+        const entity = await dexie.messages.get(id);
         return entity ? this.mapTableToModel(entity) : null;
       }
     } catch (error) {
-      console.error(`Error getting contact by ID ${id}:`, error);
+      console.error(`Error getting message by ID ${id}:`, error);
       throw error;
     }
   }
 
   /**
-   * Get all contacts
+   * Get all messages
    */
-  async getAll(): Promise<Contact[]> {
+  async getAll(): Promise<Message[]> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
-        const result = await this.databaseService.executeQuery('SELECT * FROM contacts');
+        const result = await this.databaseService.executeQuery('SELECT * FROM messages');
         
         if (result.values && result.values.length > 0) {
-          return result.values.map((entity: ContactTable) => this.mapTableToModel(entity));
+          return result.values.map((entity: MessageTable) => this.mapTableToModel(entity));
         }
         return [];
       } else {
@@ -145,19 +147,19 @@ export class ContactService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        const entities = await dexie.contacts.toArray();
-        return entities.map((entity: ContactTable) => this.mapTableToModel(entity));
+        const entities = await dexie.messages.toArray();
+        return entities.map((entity: MessageTable) => this.mapTableToModel(entity));
       }
     } catch (error) {
-      console.error('Error getting all contacts:', error);
+      console.error('Error getting all messages:', error);
       throw error;
     }
   }
 
   /**
-   * Update contact
+   * Update message
    */
-  async update(id: string, updates: Partial<Contact>): Promise<boolean> {
+  async update(id: number, updates: Partial<Message>): Promise<boolean> {
     try {
       const now = new Date().toISOString();
       const updatedEntity = {
@@ -173,15 +175,16 @@ export class ContactService {
         // Map of camelCase property names to database snake_case column names
         const fieldMappings: Record<string, string> = {
           id: 'id',
-          nickname: 'nickname',
-          pin: 'pin',
-          email: 'email',
-          phoneNumber: 'phone_number',
-          identityPublicKey: 'identity_public_key',
+          conversationId: 'conversation_id',
+          sessionId: 'session_id',
+          messageType: 'message_type',
+          content: 'content',
+          senderId: 'sender_id',
+          sent: 'sent',
+          sentTimestamp: 'sent_timestamp',
+          deliveredTimestamp: 'delivered_timestamp',
+          readTimestamp: 'read_timestamp',
           status: 'status',
-          avatarPath: 'avatar_path',
-          createdAt: 'created_at',
-          updatedAt: 'updated_at',
         };
 
         for (const [key, value] of Object.entries(updatedEntity)) {
@@ -198,7 +201,7 @@ export class ContactService {
 
         // Execute the update query
         const result = await this.databaseService.executeCommand(
-          `UPDATE contacts SET ${updateFields.join(', ')} WHERE id = ?`,
+          `UPDATE messages SET ${updateFields.join(', ')} WHERE id = ?`,
           updateValues
         );
 
@@ -211,15 +214,16 @@ export class ContactService {
         // Map of camelCase property names to database snake_case column names
         const fieldMappings: Record<string, string> = {
           id: 'id',
-          nickname: 'nickname',
-          pin: 'pin',
-          email: 'email',
-          phoneNumber: 'phone_number',
-          identityPublicKey: 'identity_public_key',
+          conversationId: 'conversation_id',
+          sessionId: 'session_id',
+          messageType: 'message_type',
+          content: 'content',
+          senderId: 'sender_id',
+          sent: 'sent',
+          sentTimestamp: 'sent_timestamp',
+          deliveredTimestamp: 'delivered_timestamp',
+          readTimestamp: 'read_timestamp',
           status: 'status',
-          avatarPath: 'avatar_path',
-          createdAt: 'created_at',
-          updatedAt: 'updated_at',
         };
 
         // Transform to snake_case for consistent field names
@@ -233,24 +237,24 @@ export class ContactService {
         }
 
         // Update the record
-        await dexie.contacts.update(id, dexieUpdates);
+        await dexie.messages.update(id, dexieUpdates);
         return true;
       }
     } catch (error) {
-      console.error(`Error updating contact ${id}:`, error);
+      console.error(`Error updating message ${id}:`, error);
       throw error;
     }
   }
 
   /**
-   * Delete contact
+   * Delete message
    */
-  async delete(id: string): Promise<boolean> {
+  async delete(id: number): Promise<boolean> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeCommand(
-          'DELETE FROM contacts WHERE id = ?',
+          'DELETE FROM messages WHERE id = ?',
           [id]
         );
         
@@ -260,11 +264,11 @@ export class ContactService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        await dexie.contacts.delete(id);
+        await dexie.messages.delete(id);
         return true;
       }
     } catch (error) {
-      console.error(`Error deleting contact ${id}:`, error);
+      console.error(`Error deleting message ${id}:`, error);
       throw error;
     }
   }
@@ -280,7 +284,7 @@ export class ContactService {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeQuery(
-          `SELECT COUNT(*) as total FROM contacts;`,
+          `SELECT COUNT(*) as total FROM messages;`,
           []
         );
 
@@ -293,7 +297,7 @@ export class ContactService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
 
-        const count = await dexie.contacts.count();
+        const count = await dexie.messages.count();
         return [{ total: count }];
       }
     } catch (error) {
@@ -305,40 +309,43 @@ export class ContactService {
   /**
    * Map database entity object to model
    */
-  private mapTableToModel(tableRow: ContactTable): Contact {
+  private mapTableToModel(tableRow: MessageTable): Message {
     // Filter out any undefined fields or SQL functions
     const model: any = {};
 
     if (tableRow.id !== undefined) {
       model.id = tableRow.id;
     }
-    if (tableRow.nickname !== undefined) {
-      model.nickname = tableRow.nickname;
+    if (tableRow.conversation_id !== undefined) {
+      model.conversationId = tableRow.conversation_id;
     }
-    if (tableRow.pin !== undefined) {
-      model.pin = tableRow.pin;
+    if (tableRow.session_id !== undefined) {
+      model.sessionId = tableRow.session_id;
     }
-    if (tableRow.email !== undefined) {
-      model.email = tableRow.email;
+    if (tableRow.message_type !== undefined) {
+      model.messageType = tableRow.message_type;
     }
-    if (tableRow.phone_number !== undefined) {
-      model.phoneNumber = tableRow.phone_number;
+    if (tableRow.content !== undefined) {
+      model.content = tableRow.content;
     }
-    if (tableRow.identity_public_key !== undefined) {
-      model.identityPublicKey = tableRow.identity_public_key;
+    if (tableRow.sender_id !== undefined) {
+      model.senderId = tableRow.sender_id;
+    }
+    if (tableRow.sent !== undefined) {
+      model.sent = tableRow.sent;
+    }
+    if (tableRow.sent_timestamp !== undefined) {
+      model.sentTimestamp = tableRow.sent_timestamp;
+    }
+    if (tableRow.delivered_timestamp !== undefined) {
+      model.deliveredTimestamp = tableRow.delivered_timestamp;
+    }
+    if (tableRow.read_timestamp !== undefined) {
+      model.readTimestamp = tableRow.read_timestamp;
     }
     if (tableRow.status !== undefined) {
       model.status = tableRow.status;
     }
-    if (tableRow.avatar_path !== undefined) {
-      model.avatarPath = tableRow.avatar_path;
-    }
-    if (tableRow.created_at !== undefined) {
-      model.createdAt = tableRow.created_at;
-    }
-    if (tableRow.updated_at !== undefined) {
-      model.updatedAt = tableRow.updated_at;
-    }
-    return model as Contact;
+    return model as Message;
   }
 }

@@ -1,12 +1,12 @@
 // Auto-generated TypeScript base model with common fields
-// Generated on 2025-05-15T02:15:01.112Z
+// Generated on 2025-05-17T23:51:52.003Z
 
 /**
  * Base interface with common fields for all models
  */
-export interface BaseModel {
+export interface BaseModel<IDType = number> {
   /** Primary Key */
-  id: number;
+  id: IDType;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -16,9 +16,9 @@ export interface BaseModel {
 /**
  * Base interface with snake_case fields for database tables
  */
-export interface BaseTable {
+export interface BaseTable<IDType = number> {
   /** Primary Key */
-  id: number;
+  id: IDType;
   /** Creation timestamp */
   created_at: string;
   /** Last update timestamp */

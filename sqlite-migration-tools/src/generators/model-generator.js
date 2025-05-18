@@ -10,9 +10,9 @@ function generateBaseModelContent() {
   output += `// Generated on ${new Date().toISOString()}\n\n`;
 
   output += `/**\n * Base interface with common fields for all models\n */\n`;
-  output += `export interface BaseModel {\n`;
+  output += `export interface BaseModel<IDType = number> {\n`;
   output += `  /** Primary Key */\n`;
-  output += `  id: number;\n`;
+  output += `  id: IDType;\n`;
   output += `  /** Creation timestamp */\n`;
   output += `  createdAt: string;\n`;
   output += `  /** Last update timestamp */\n`;
@@ -20,9 +20,9 @@ function generateBaseModelContent() {
   output += `}\n\n`;
 
   output += `/**\n * Base interface with snake_case fields for database tables\n */\n`;
-  output += `export interface BaseTable {\n`;
+  output += `export interface BaseTable<IDType = number> {\n`;
   output += `  /** Primary Key */\n`;
-  output += `  id: number;\n`;
+  output += `  id: IDType;\n`;
   output += `  /** Creation timestamp */\n`;
   output += `  created_at: string;\n`;
   output += `  /** Last update timestamp */\n`;
@@ -38,11 +38,14 @@ function generateBaseModelContent() {
  * @returns {boolean} True if table has common fields
  */
 function shouldExtendBaseModel(table) {
+  console.log(`Checking if table ${table.name} should extend BaseModel...`);
+  // console.log(`Table columns: ${JSON.stringify(table.columns)}`);
   // Check if table has id, created_at, and updated_at fields
   const hasId = table.columns.some(col => col.name === 'id');
   const hasCreatedAt = table.columns.some(col => col.name === 'created_at');
   const hasUpdatedAt = table.columns.some(col => col.name === 'updated_at');
 
+  console.log(`Table ${table.name} has id: ${hasId}, created_at: ${hasCreatedAt}, updated_at: ${hasUpdatedAt}`);
   return hasId && hasCreatedAt && hasUpdatedAt;
 }
 
@@ -91,16 +94,20 @@ function generateTypeScriptModelForTable(table, schema, extendsBaseModel = false
   const interfaceName = utils.tableNameToInterfaceName(table.name);
   output += `/**\n * Interface for the ${table.name} table\n */\n`;
 
+  // Check if this table has an ID column with a type different from number
+  const idColumn = table.columns.find(col => col.name === 'id' && col.isPrimaryKey);
+  const idType = idColumn && idColumn.sqlType.toUpperCase() === 'TEXT' ? 'string' : 'number';
+
   // Main interface definition (camelCase props)
   if (extendsBaseModel) {
-    output += `export interface ${interfaceName} extends BaseModel {\n`;
+    output += `export interface ${interfaceName} extends BaseModel<${idType}> {\n`;
   } else {
     output += `export interface ${interfaceName} {\n`;
   }
 
   // Properties in camelCase
   table.columns.forEach(column => {
-    // Skip common fields if extending BaseModel
+    // Skip common fields if extending BaseModel (id, created_at, updated_at)
     if (extendsBaseModel &&
       (column.name === 'id' ||
         column.name === 'created_at' ||
@@ -141,7 +148,7 @@ function generateTypeScriptModelForTable(table, schema, extendsBaseModel = false
   // Table interface documentation (snake_case props for direct DB access)
   if (extendsBaseModel) {
     output += `/**\n * Table interface (snake_case) for the ${table.name} table\n */\n`;
-    output += `export interface ${interfaceName}Table extends BaseTable {\n`;
+    output += `export interface ${interfaceName}Table extends BaseTable<${idType}> {\n`;
   } else {
     output += `/**\n * Table interface (snake_case) for the ${table.name} table\n */\n`;
     output += `export interface ${interfaceName}Table {\n`;
@@ -149,7 +156,7 @@ function generateTypeScriptModelForTable(table, schema, extendsBaseModel = false
 
   // Properties in snake_case (original DB column names)
   table.columns.forEach(column => {
-    // Skip common fields if extending BaseTable
+    // Skip common fields if extending BaseTable (id, created_at, updated_at)
     if (extendsBaseModel &&
       (column.name === 'id' ||
         column.name === 'created_at' ||

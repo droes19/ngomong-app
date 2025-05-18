@@ -14,7 +14,8 @@
     "generate-migrations": "cd sqlite-migration-tools && npm run generate-migrations",
     "generate-models": "cd sqlite-migration-tools && npm run generate-models",
     "generate-dexie": "cd sqlite-migration-tools && npm run generate-dexie",
-    "generate-services": "cd sqlite-migration-tools && npm run generate-services"
+    "generate-services": "cd sqlite-migration-tools && npm run generate-services",
+    "generate-query-services": "cd sqlite-migration-tools && npm run generate-query-services"
   },
   "private": true,
   "dependencies": {

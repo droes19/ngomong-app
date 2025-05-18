@@ -10,6 +10,7 @@ const args = process.argv.slice(2);
 
 // Default input path
 let inputPath = '../migrations';
+let inputQueriesPath = '../queries';
 // Flag to use numeric pattern instead of V prefix pattern
 let useNumericPattern = false;
 
@@ -97,9 +98,9 @@ async function runAll() {
     // Run Service generator
     console.log('4. Generating services...');
     if (isDirectory) {
-      await generators.processMigrationDirectoryForServices(inputPath, config.defaultPaths.services, pattern);
+      await generators.processQueryDirectory(inputQueriesPath, inputPath, config.defaultPaths.services, pattern);
     } else {
-      await generators.processFileForServices(inputPath, config.defaultPaths.services);
+      await generators.processQueryFile(inputQueriesPath, config.defaultPaths.services);
     }
     console.log('');
 

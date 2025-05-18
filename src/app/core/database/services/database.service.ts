@@ -119,6 +119,9 @@ export class DatabaseService {
 
       console.log('Opening database connection...');
       await this.db.open();
+      // Enable foreign keys
+      const result = await (this.db as SQLiteDBConnection).execute('PRAGMA foreign_keys = ON;');
+      console.log('Foreign keys enabled:', result);
 
       console.log('Database URL:', (this.db as SQLiteDBConnection).getUrl());
       // Create migrations table first

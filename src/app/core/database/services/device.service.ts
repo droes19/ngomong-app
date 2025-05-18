@@ -1,25 +1,25 @@
-// Auto-generated TypeScript service for the user table
-// Generated on 2025-05-17T23:51:52.284Z
-// Originally defined in: V1__create_user_table.sql
+// Auto-generated TypeScript service for the devices table
+// Generated on 2025-05-17T23:51:52.221Z
+// Originally defined in: V7__create_device_table.sql
 // Custom queries from SQL files
 
 import { Injectable } from '@angular/core';
 import { DatabaseService } from './database.service';
-import { User, UserTable } from '../models/user';
+import { Device, DeviceTable } from '../models/device';
 
 @Injectable({
   providedIn: 'root'
 })
-export class UserService {
+export class DeviceService {
   constructor(private databaseService: DatabaseService) {}
 
   /**
-   * Create a new user
+   * Create a new device
    */
-  async create(user: User): Promise<string | undefined> {
+  async create(device: Device): Promise<number | undefined> {
     const now = new Date().toISOString();
     const entityToInsert = {
-      ...user,
+      ...device,
       createdAt: now,
       updatedAt: now
     };
@@ -27,39 +27,31 @@ export class UserService {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // Convert model to snake_case for SQL database
-        const tableRow: UserTable = {
-          id: entityToInsert.id,
-          nickname: entityToInsert.nickname,
-          pin: entityToInsert.pin,
-          email: entityToInsert.email,
-          phone_number: entityToInsert.phoneNumber,
-          identity_key_pair: entityToInsert.identityKeyPair,
+        const tableRow: DeviceTable = {
+          id: entityToInsert.id || 0,
+          contact_id: entityToInsert.contactId,
+          device_id: entityToInsert.deviceId,
           identity_public_key: entityToInsert.identityPublicKey,
+          active: entityToInsert.active,
           created_at: entityToInsert.createdAt,
           updated_at: entityToInsert.updatedAt,
         };
 
         // SQLite implementation
         const result = await this.databaseService.executeCommand(
-          `INSERT INTO user (
-            id,
-            nickname,
-            pin,
-            email,
-            phone_number,
-            identity_key_pair,
+          `INSERT INTO devices (
+            contact_id,
+            device_id,
             identity_public_key,
+            active,
             created_at,
             updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          ) VALUES (?, ?, ?, ?, ?, ?)`,
           [
-            tableRow.id,
-            tableRow.nickname,
-            tableRow.pin,
-            tableRow.email || null,
-            tableRow.phone_number || null,
-            tableRow.identity_key_pair,
+            tableRow.contact_id,
+            tableRow.device_id,
             tableRow.identity_public_key,
+            tableRow.active || null,
             tableRow.created_at,
             tableRow.updated_at
           ]
@@ -72,36 +64,34 @@ export class UserService {
         if (!dexie) throw new Error('Dexie database not initialized');
 
         // Convert model to table format for storage
-        const tableRow: UserTable = {
-          id: entityToInsert.id,
-          nickname: entityToInsert.nickname,
-          pin: entityToInsert.pin,
-          email: entityToInsert.email,
-          phone_number: entityToInsert.phoneNumber,
-          identity_key_pair: entityToInsert.identityKeyPair,
+        const tableRow: DeviceTable = {
+          id: entityToInsert.id || 0,
+          contact_id: entityToInsert.contactId,
+          device_id: entityToInsert.deviceId,
           identity_public_key: entityToInsert.identityPublicKey,
+          active: entityToInsert.active,
           created_at: entityToInsert.createdAt,
           updated_at: entityToInsert.updatedAt,
         };
 
-        const id = await dexie.user.add(tableRow);
+        const id = await dexie.devices.add(tableRow);
         return id;
       }
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Error creating device:', error);
       throw error;
     }
   }
 
   /**
-   * Get user by ID
+   * Get device by ID
    */
-  async getById(id: string): Promise<User | null> {
+  async getById(id: number): Promise<Device | null> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeQuery(
-          'SELECT * FROM user WHERE id = ?',
+          'SELECT * FROM devices WHERE id = ?',
           [id]
         );
         
@@ -114,26 +104,26 @@ export class UserService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        const entity = await dexie.user.get(id);
+        const entity = await dexie.devices.get(id);
         return entity ? this.mapTableToModel(entity) : null;
       }
     } catch (error) {
-      console.error(`Error getting user by ID ${id}:`, error);
+      console.error(`Error getting device by ID ${id}:`, error);
       throw error;
     }
   }
 
   /**
-   * Get all user
+   * Get all devices
    */
-  async getAll(): Promise<User[]> {
+  async getAll(): Promise<Device[]> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
-        const result = await this.databaseService.executeQuery('SELECT * FROM user');
+        const result = await this.databaseService.executeQuery('SELECT * FROM devices');
         
         if (result.values && result.values.length > 0) {
-          return result.values.map((entity: UserTable) => this.mapTableToModel(entity));
+          return result.values.map((entity: DeviceTable) => this.mapTableToModel(entity));
         }
         return [];
       } else {
@@ -141,19 +131,19 @@ export class UserService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        const entities = await dexie.user.toArray();
-        return entities.map((entity: UserTable) => this.mapTableToModel(entity));
+        const entities = await dexie.devices.toArray();
+        return entities.map((entity: DeviceTable) => this.mapTableToModel(entity));
       }
     } catch (error) {
-      console.error('Error getting all user:', error);
+      console.error('Error getting all devices:', error);
       throw error;
     }
   }
 
   /**
-   * Update user
+   * Update device
    */
-  async update(id: string, updates: Partial<User>): Promise<boolean> {
+  async update(id: number, updates: Partial<Device>): Promise<boolean> {
     try {
       const now = new Date().toISOString();
       const updatedEntity = {
@@ -169,12 +159,10 @@ export class UserService {
         // Map of camelCase property names to database snake_case column names
         const fieldMappings: Record<string, string> = {
           id: 'id',
-          nickname: 'nickname',
-          pin: 'pin',
-          email: 'email',
-          phoneNumber: 'phone_number',
-          identityKeyPair: 'identity_key_pair',
+          contactId: 'contact_id',
+          deviceId: 'device_id',
           identityPublicKey: 'identity_public_key',
+          active: 'active',
           createdAt: 'created_at',
           updatedAt: 'updated_at',
         };
@@ -193,7 +181,7 @@ export class UserService {
 
         // Execute the update query
         const result = await this.databaseService.executeCommand(
-          `UPDATE user SET ${updateFields.join(', ')} WHERE id = ?`,
+          `UPDATE devices SET ${updateFields.join(', ')} WHERE id = ?`,
           updateValues
         );
 
@@ -206,12 +194,10 @@ export class UserService {
         // Map of camelCase property names to database snake_case column names
         const fieldMappings: Record<string, string> = {
           id: 'id',
-          nickname: 'nickname',
-          pin: 'pin',
-          email: 'email',
-          phoneNumber: 'phone_number',
-          identityKeyPair: 'identity_key_pair',
+          contactId: 'contact_id',
+          deviceId: 'device_id',
           identityPublicKey: 'identity_public_key',
+          active: 'active',
           createdAt: 'created_at',
           updatedAt: 'updated_at',
         };
@@ -227,24 +213,24 @@ export class UserService {
         }
 
         // Update the record
-        await dexie.user.update(id, dexieUpdates);
+        await dexie.devices.update(id, dexieUpdates);
         return true;
       }
     } catch (error) {
-      console.error(`Error updating user ${id}:`, error);
+      console.error(`Error updating device ${id}:`, error);
       throw error;
     }
   }
 
   /**
-   * Delete user
+   * Delete device
    */
-  async delete(id: string): Promise<boolean> {
+  async delete(id: number): Promise<boolean> {
     try {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeCommand(
-          'DELETE FROM user WHERE id = ?',
+          'DELETE FROM devices WHERE id = ?',
           [id]
         );
         
@@ -254,11 +240,11 @@ export class UserService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
         
-        await dexie.user.delete(id);
+        await dexie.devices.delete(id);
         return true;
       }
     } catch (error) {
-      console.error(`Error deleting user ${id}:`, error);
+      console.error(`Error deleting device ${id}:`, error);
       throw error;
     }
   }
@@ -274,7 +260,7 @@ export class UserService {
       if (this.databaseService.isNativeDatabase()) {
         // SQLite implementation
         const result = await this.databaseService.executeQuery(
-          `SELECT COUNT(*) as total FROM user;`,
+          `SELECT COUNT(*) as total FROM devices;`,
           []
         );
 
@@ -287,7 +273,7 @@ export class UserService {
         const dexie = this.databaseService.getDexieInstance();
         if (!dexie) throw new Error('Dexie database not initialized');
 
-        const count = await dexie.user.count();
+        const count = await dexie.devices.count();
         return [{ total: count }];
       }
     } catch (error) {
@@ -297,131 +283,26 @@ export class UserService {
   }
 
   /**
-   * findByCredentials - Custom query
-   *
-   * @param nickname, pin Parameters for the query
-   * @returns Entity or null
-   */
-  async findByCredentials(nickname: any, pin: any): Promise<User | null> {
-    try {
-      if (this.databaseService.isNativeDatabase()) {
-        // SQLite implementation
-        const result = await this.databaseService.executeQuery(
-          `SELECT * FROM user WHERE nickname = ? AND pin = ? LIMIT 1;`,
-          [nickname, pin]
-        );
-
-        if (result.values && result.values.length > 0) {
-          return this.mapTableToModel(result.values[0]);
-        }
-        return null;
-      } else {
-        // Dexie implementation
-        const dexie = this.databaseService.getDexieInstance();
-        if (!dexie) throw new Error('Dexie database not initialized');
-
-        const entity = await dexie.user.where('nickname').equals(nickname).where('pin').equals(pin).first();
-        return entity ? this.mapTableToModel(entity) : null;
-      }
-    } catch (error) {
-      console.error('Error executing findByCredentials:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * findByEmail - Custom query
-   *
-   * @param email Parameters for the query
-   * @returns Entity or null
-   */
-  async findByEmail(email: any): Promise<User | null> {
-    try {
-      if (this.databaseService.isNativeDatabase()) {
-        // SQLite implementation
-        const result = await this.databaseService.executeQuery(
-          `SELECT * FROM user WHERE email = ?;`,
-          [email]
-        );
-
-        if (result.values && result.values.length > 0) {
-          return this.mapTableToModel(result.values[0]);
-        }
-        return null;
-      } else {
-        // Dexie implementation
-        const dexie = this.databaseService.getDexieInstance();
-        if (!dexie) throw new Error('Dexie database not initialized');
-
-        const entity = await dexie.user.where('email').equals(email).first();
-        return entity ? this.mapTableToModel(entity) : null;
-      }
-    } catch (error) {
-      console.error('Error executing findByEmail:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * findByNickname - Custom query
-   *
-   * @param nickname Parameters for the query
-   * @returns Entity or null
-   */
-  async findByNickname(nickname: any): Promise<User | null> {
-    try {
-      if (this.databaseService.isNativeDatabase()) {
-        // SQLite implementation
-        const result = await this.databaseService.executeQuery(
-          `SELECT * FROM user WHERE nickname = ?;`,
-          [nickname]
-        );
-
-        if (result.values && result.values.length > 0) {
-          return this.mapTableToModel(result.values[0]);
-        }
-        return null;
-      } else {
-        // Dexie implementation
-        const dexie = this.databaseService.getDexieInstance();
-        if (!dexie) throw new Error('Dexie database not initialized');
-
-        const entity = await dexie.user.where('nickname').equals(nickname).first();
-        return entity ? this.mapTableToModel(entity) : null;
-      }
-    } catch (error) {
-      console.error('Error executing findByNickname:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Map database entity object to model
    */
-  private mapTableToModel(tableRow: UserTable): User {
+  private mapTableToModel(tableRow: DeviceTable): Device {
     // Filter out any undefined fields or SQL functions
     const model: any = {};
 
     if (tableRow.id !== undefined) {
       model.id = tableRow.id;
     }
-    if (tableRow.nickname !== undefined) {
-      model.nickname = tableRow.nickname;
+    if (tableRow.contact_id !== undefined) {
+      model.contactId = tableRow.contact_id;
     }
-    if (tableRow.pin !== undefined) {
-      model.pin = tableRow.pin;
-    }
-    if (tableRow.email !== undefined) {
-      model.email = tableRow.email;
-    }
-    if (tableRow.phone_number !== undefined) {
-      model.phoneNumber = tableRow.phone_number;
-    }
-    if (tableRow.identity_key_pair !== undefined) {
-      model.identityKeyPair = tableRow.identity_key_pair;
+    if (tableRow.device_id !== undefined) {
+      model.deviceId = tableRow.device_id;
     }
     if (tableRow.identity_public_key !== undefined) {
       model.identityPublicKey = tableRow.identity_public_key;
+    }
+    if (tableRow.active !== undefined) {
+      model.active = tableRow.active;
     }
     if (tableRow.created_at !== undefined) {
       model.createdAt = tableRow.created_at;
@@ -429,6 +310,6 @@ export class UserService {
     if (tableRow.updated_at !== undefined) {
       model.updatedAt = tableRow.updated_at;
     }
-    return model as User;
+    return model as Device;
   }
 }
