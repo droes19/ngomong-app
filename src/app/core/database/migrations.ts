@@ -1,5 +1,7 @@
 // Auto-generated SQLite migrations array from SQL files
-// Generated on 2025-05-17T23:51:51.983Z
+// Generated on 2025-05-21T05:38:39.554Z
+
+import { capSQLiteVersionUpgrade } from "@capacitor-community/sqlite";
 
 /**
  * SQLite migration definition
@@ -89,7 +91,7 @@ export const ALL_MIGRATIONS: Migration[] = [
  * Prepare migration statements for Capacitor SQLite
  * @returns Upgrade statements for Capacitor SQLite
  */
-export function prepareMigrations() {
+export function prepareMigrations(): capSQLiteVersionUpgrade[] {
   // Create migrations table first
   const createMigrationsTable = `
     CREATE TABLE IF NOT EXISTS migrations (
@@ -100,7 +102,7 @@ export function prepareMigrations() {
   `;
 
   // Prepare upgrade statements for each version
-  const upgradeStatements = [];
+  const upgradeStatements: capSQLiteVersionUpgrade[] = [];
 
   // Add upgrade statement for each migration
   for (const migration of ALL_MIGRATIONS) {

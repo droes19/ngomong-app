@@ -1,5 +1,5 @@
 // Auto-generated TypeScript service for the conversations table
-// Generated on 2025-05-17T23:51:52.215Z
+// Generated on 2025-05-21T05:38:39.711Z
 // Originally defined in: V5__create_conversation_table.sql
 // Custom queries from SQL files
 
@@ -14,7 +14,10 @@ export class ConversationService {
   constructor(private databaseService: DatabaseService) {}
 
   /**
-   * Create a new conversation
+   * Create a new conversation entity in the database.
+   * 
+   * @param conversation - The entity to create
+   * @returns Promise resolving to the ID of the created entity or undefined on failure
    */
   async create(conversation: Conversation): Promise<number | undefined> {
     const now = new Date().toISOString();
@@ -96,7 +99,39 @@ export class ConversationService {
   }
 
   /**
-   * Get conversation by ID
+   * Retrieves all conversations entities from the database.
+   * 
+   * @returns Promise resolving to an array of Conversation entities
+   */
+  async getAll(): Promise<Conversation[]> {
+    try {
+      if (this.databaseService.isNativeDatabase()) {
+        // SQLite implementation
+        const result = await this.databaseService.executeQuery('SELECT * FROM conversations');
+        
+        if (result.values && result.values.length > 0) {
+          return result.values.map((entity: ConversationTable) => this.mapTableToModel(entity));
+        }
+        return [];
+      } else {
+        // Dexie implementation
+        const dexie = this.databaseService.getDexieInstance();
+        if (!dexie) throw new Error('Dexie database not initialized');
+        
+        const entities = await dexie.conversations.toArray();
+        return entities.map((entity: ConversationTable) => this.mapTableToModel(entity));
+      }
+    } catch (error) {
+      console.error('Error getting all conversations:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieves a single conversation entity by its ID.
+   * 
+   * @param id - The primary key (id) of the entity to retrieve
+   * @returns Promise resolving to the entity if found, or null if not found
    */
   async getById(id: number): Promise<Conversation | null> {
     try {
@@ -126,34 +161,13 @@ export class ConversationService {
   }
 
   /**
-   * Get all conversations
-   */
-  async getAll(): Promise<Conversation[]> {
-    try {
-      if (this.databaseService.isNativeDatabase()) {
-        // SQLite implementation
-        const result = await this.databaseService.executeQuery('SELECT * FROM conversations');
-        
-        if (result.values && result.values.length > 0) {
-          return result.values.map((entity: ConversationTable) => this.mapTableToModel(entity));
-        }
-        return [];
-      } else {
-        // Dexie implementation
-        const dexie = this.databaseService.getDexieInstance();
-        if (!dexie) throw new Error('Dexie database not initialized');
-        
-        const entities = await dexie.conversations.toArray();
-        return entities.map((entity: ConversationTable) => this.mapTableToModel(entity));
-      }
-    } catch (error) {
-      console.error('Error getting all conversations:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Update conversation
+   * Updates an existing conversation entity in the database.
+   * Only the fields provided in the updates parameter will be modified.
+   * The updatedAt field is automatically set to the current timestamp.
+   * 
+   * @param id - The primary key (id) of the entity to update
+   * @param updates - Partial object containing only the fields to update
+   * @returns Promise resolving to true if the update was successful, false otherwise
    */
   async update(id: number, updates: Partial<Conversation>): Promise<boolean> {
     try {
@@ -241,7 +255,10 @@ export class ConversationService {
   }
 
   /**
-   * Delete conversation
+   * Delete an existing conversation entity from the database.
+   * 
+   * @param id - The primary key (id) of the entity to delete
+   * @returns Promise resolving to true if the delete was successful, false otherwise
    */
   async delete(id: number): Promise<boolean> {
     try {

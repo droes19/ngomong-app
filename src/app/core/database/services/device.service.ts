@@ -1,5 +1,5 @@
 // Auto-generated TypeScript service for the devices table
-// Generated on 2025-05-17T23:51:52.221Z
+// Generated on 2025-05-21T05:38:39.714Z
 // Originally defined in: V7__create_device_table.sql
 // Custom queries from SQL files
 
@@ -14,7 +14,10 @@ export class DeviceService {
   constructor(private databaseService: DatabaseService) {}
 
   /**
-   * Create a new device
+   * Create a new device entity in the database.
+   * 
+   * @param device - The entity to create
+   * @returns Promise resolving to the ID of the created entity or undefined on failure
    */
   async create(device: Device): Promise<number | undefined> {
     const now = new Date().toISOString();
@@ -84,7 +87,39 @@ export class DeviceService {
   }
 
   /**
-   * Get device by ID
+   * Retrieves all devices entities from the database.
+   * 
+   * @returns Promise resolving to an array of Device entities
+   */
+  async getAll(): Promise<Device[]> {
+    try {
+      if (this.databaseService.isNativeDatabase()) {
+        // SQLite implementation
+        const result = await this.databaseService.executeQuery('SELECT * FROM devices');
+        
+        if (result.values && result.values.length > 0) {
+          return result.values.map((entity: DeviceTable) => this.mapTableToModel(entity));
+        }
+        return [];
+      } else {
+        // Dexie implementation
+        const dexie = this.databaseService.getDexieInstance();
+        if (!dexie) throw new Error('Dexie database not initialized');
+        
+        const entities = await dexie.devices.toArray();
+        return entities.map((entity: DeviceTable) => this.mapTableToModel(entity));
+      }
+    } catch (error) {
+      console.error('Error getting all devices:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieves a single device entity by its ID.
+   * 
+   * @param id - The primary key (id) of the entity to retrieve
+   * @returns Promise resolving to the entity if found, or null if not found
    */
   async getById(id: number): Promise<Device | null> {
     try {
@@ -114,34 +149,13 @@ export class DeviceService {
   }
 
   /**
-   * Get all devices
-   */
-  async getAll(): Promise<Device[]> {
-    try {
-      if (this.databaseService.isNativeDatabase()) {
-        // SQLite implementation
-        const result = await this.databaseService.executeQuery('SELECT * FROM devices');
-        
-        if (result.values && result.values.length > 0) {
-          return result.values.map((entity: DeviceTable) => this.mapTableToModel(entity));
-        }
-        return [];
-      } else {
-        // Dexie implementation
-        const dexie = this.databaseService.getDexieInstance();
-        if (!dexie) throw new Error('Dexie database not initialized');
-        
-        const entities = await dexie.devices.toArray();
-        return entities.map((entity: DeviceTable) => this.mapTableToModel(entity));
-      }
-    } catch (error) {
-      console.error('Error getting all devices:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Update device
+   * Updates an existing device entity in the database.
+   * Only the fields provided in the updates parameter will be modified.
+   * The updatedAt field is automatically set to the current timestamp.
+   * 
+   * @param id - The primary key (id) of the entity to update
+   * @param updates - Partial object containing only the fields to update
+   * @returns Promise resolving to true if the update was successful, false otherwise
    */
   async update(id: number, updates: Partial<Device>): Promise<boolean> {
     try {
@@ -223,7 +237,10 @@ export class DeviceService {
   }
 
   /**
-   * Delete device
+   * Delete an existing device entity from the database.
+   * 
+   * @param id - The primary key (id) of the entity to delete
+   * @returns Promise resolving to true if the delete was successful, false otherwise
    */
   async delete(id: number): Promise<boolean> {
     try {

@@ -1,5 +1,5 @@
 // Auto-generated TypeScript service for the skipped_message_keys table
-// Generated on 2025-05-17T23:51:52.275Z
+// Generated on 2025-05-21T05:38:39.728Z
 // Originally defined in: V4__create_skipped_message_key_table.sql
 // Custom queries from SQL files
 
@@ -14,7 +14,10 @@ export class SkippedMessageKeyService {
   constructor(private databaseService: DatabaseService) {}
 
   /**
-   * Create a new skippedmessagekey
+   * Create a new skippedmessagekey entity in the database.
+   * 
+   * @param skippedmessagekey - The entity to create
+   * @returns Promise resolving to the ID of the created entity or undefined on failure
    */
   async create(skippedmessagekey: SkippedMessageKey): Promise<number | undefined> {
     const now = new Date().toISOString();
@@ -80,7 +83,39 @@ export class SkippedMessageKeyService {
   }
 
   /**
-   * Get skippedmessagekey by ID
+   * Retrieves all skipped_message_keys entities from the database.
+   * 
+   * @returns Promise resolving to an array of SkippedMessageKey entities
+   */
+  async getAll(): Promise<SkippedMessageKey[]> {
+    try {
+      if (this.databaseService.isNativeDatabase()) {
+        // SQLite implementation
+        const result = await this.databaseService.executeQuery('SELECT * FROM skipped_message_keys');
+        
+        if (result.values && result.values.length > 0) {
+          return result.values.map((entity: SkippedMessageKeyTable) => this.mapTableToModel(entity));
+        }
+        return [];
+      } else {
+        // Dexie implementation
+        const dexie = this.databaseService.getDexieInstance();
+        if (!dexie) throw new Error('Dexie database not initialized');
+        
+        const entities = await dexie.skipped_message_keys.toArray();
+        return entities.map((entity: SkippedMessageKeyTable) => this.mapTableToModel(entity));
+      }
+    } catch (error) {
+      console.error('Error getting all skipped_message_keys:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieves a single skippedmessagekey entity by its ID.
+   * 
+   * @param id - The primary key (id) of the entity to retrieve
+   * @returns Promise resolving to the entity if found, or null if not found
    */
   async getById(id: number): Promise<SkippedMessageKey | null> {
     try {
@@ -110,34 +145,13 @@ export class SkippedMessageKeyService {
   }
 
   /**
-   * Get all skipped_message_keys
-   */
-  async getAll(): Promise<SkippedMessageKey[]> {
-    try {
-      if (this.databaseService.isNativeDatabase()) {
-        // SQLite implementation
-        const result = await this.databaseService.executeQuery('SELECT * FROM skipped_message_keys');
-        
-        if (result.values && result.values.length > 0) {
-          return result.values.map((entity: SkippedMessageKeyTable) => this.mapTableToModel(entity));
-        }
-        return [];
-      } else {
-        // Dexie implementation
-        const dexie = this.databaseService.getDexieInstance();
-        if (!dexie) throw new Error('Dexie database not initialized');
-        
-        const entities = await dexie.skipped_message_keys.toArray();
-        return entities.map((entity: SkippedMessageKeyTable) => this.mapTableToModel(entity));
-      }
-    } catch (error) {
-      console.error('Error getting all skipped_message_keys:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Update skippedmessagekey
+   * Updates an existing skippedmessagekey entity in the database.
+   * Only the fields provided in the updates parameter will be modified.
+   * The updatedAt field is automatically set to the current timestamp.
+   * 
+   * @param id - The primary key (id) of the entity to update
+   * @param updates - Partial object containing only the fields to update
+   * @returns Promise resolving to true if the update was successful, false otherwise
    */
   async update(id: number, updates: Partial<SkippedMessageKey>): Promise<boolean> {
     try {
@@ -217,7 +231,10 @@ export class SkippedMessageKeyService {
   }
 
   /**
-   * Delete skippedmessagekey
+   * Delete an existing skippedmessagekey entity from the database.
+   * 
+   * @param id - The primary key (id) of the entity to delete
+   * @returns Promise resolving to true if the delete was successful, false otherwise
    */
   async delete(id: number): Promise<boolean> {
     try {

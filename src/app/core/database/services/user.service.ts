@@ -1,5 +1,5 @@
 // Auto-generated TypeScript service for the user table
-// Generated on 2025-05-17T23:51:52.284Z
+// Generated on 2025-05-21T05:38:39.733Z
 // Originally defined in: V1__create_user_table.sql
 // Custom queries from SQL files
 
@@ -14,7 +14,10 @@ export class UserService {
   constructor(private databaseService: DatabaseService) {}
 
   /**
-   * Create a new user
+   * Create a new user entity in the database.
+   * 
+   * @param user - The entity to create
+   * @returns Promise resolving to the ID of the created entity or undefined on failure
    */
   async create(user: User): Promise<string | undefined> {
     const now = new Date().toISOString();
@@ -94,7 +97,39 @@ export class UserService {
   }
 
   /**
-   * Get user by ID
+   * Retrieves all user entities from the database.
+   * 
+   * @returns Promise resolving to an array of User entities
+   */
+  async getAll(): Promise<User[]> {
+    try {
+      if (this.databaseService.isNativeDatabase()) {
+        // SQLite implementation
+        const result = await this.databaseService.executeQuery('SELECT * FROM user');
+        
+        if (result.values && result.values.length > 0) {
+          return result.values.map((entity: UserTable) => this.mapTableToModel(entity));
+        }
+        return [];
+      } else {
+        // Dexie implementation
+        const dexie = this.databaseService.getDexieInstance();
+        if (!dexie) throw new Error('Dexie database not initialized');
+        
+        const entities = await dexie.user.toArray();
+        return entities.map((entity: UserTable) => this.mapTableToModel(entity));
+      }
+    } catch (error) {
+      console.error('Error getting all user:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieves a single user entity by its ID.
+   * 
+   * @param id - The primary key (id) of the entity to retrieve
+   * @returns Promise resolving to the entity if found, or null if not found
    */
   async getById(id: string): Promise<User | null> {
     try {
@@ -124,34 +159,13 @@ export class UserService {
   }
 
   /**
-   * Get all user
-   */
-  async getAll(): Promise<User[]> {
-    try {
-      if (this.databaseService.isNativeDatabase()) {
-        // SQLite implementation
-        const result = await this.databaseService.executeQuery('SELECT * FROM user');
-        
-        if (result.values && result.values.length > 0) {
-          return result.values.map((entity: UserTable) => this.mapTableToModel(entity));
-        }
-        return [];
-      } else {
-        // Dexie implementation
-        const dexie = this.databaseService.getDexieInstance();
-        if (!dexie) throw new Error('Dexie database not initialized');
-        
-        const entities = await dexie.user.toArray();
-        return entities.map((entity: UserTable) => this.mapTableToModel(entity));
-      }
-    } catch (error) {
-      console.error('Error getting all user:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Update user
+   * Updates an existing user entity in the database.
+   * Only the fields provided in the updates parameter will be modified.
+   * The updatedAt field is automatically set to the current timestamp.
+   * 
+   * @param id - The primary key (id) of the entity to update
+   * @param updates - Partial object containing only the fields to update
+   * @returns Promise resolving to true if the update was successful, false otherwise
    */
   async update(id: string, updates: Partial<User>): Promise<boolean> {
     try {
@@ -237,7 +251,10 @@ export class UserService {
   }
 
   /**
-   * Delete user
+   * Delete an existing user entity from the database.
+   * 
+   * @param id - The primary key (id) of the entity to delete
+   * @returns Promise resolving to true if the delete was successful, false otherwise
    */
   async delete(id: string): Promise<boolean> {
     try {

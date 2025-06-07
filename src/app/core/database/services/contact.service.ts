@@ -1,5 +1,5 @@
 // Auto-generated TypeScript service for the contacts table
-// Generated on 2025-05-17T23:51:52.205Z
+// Generated on 2025-05-21T05:38:39.701Z
 // Originally defined in: V2__create_contact_table.sql
 // Custom queries from SQL files
 
@@ -14,7 +14,10 @@ export class ContactService {
   constructor(private databaseService: DatabaseService) {}
 
   /**
-   * Create a new contact
+   * Create a new contact entity in the database.
+   * 
+   * @param contact - The entity to create
+   * @returns Promise resolving to the ID of the created entity or undefined on failure
    */
   async create(contact: Contact): Promise<string | undefined> {
     const now = new Date().toISOString();
@@ -98,7 +101,39 @@ export class ContactService {
   }
 
   /**
-   * Get contact by ID
+   * Retrieves all contacts entities from the database.
+   * 
+   * @returns Promise resolving to an array of Contact entities
+   */
+  async getAll(): Promise<Contact[]> {
+    try {
+      if (this.databaseService.isNativeDatabase()) {
+        // SQLite implementation
+        const result = await this.databaseService.executeQuery('SELECT * FROM contacts');
+        
+        if (result.values && result.values.length > 0) {
+          return result.values.map((entity: ContactTable) => this.mapTableToModel(entity));
+        }
+        return [];
+      } else {
+        // Dexie implementation
+        const dexie = this.databaseService.getDexieInstance();
+        if (!dexie) throw new Error('Dexie database not initialized');
+        
+        const entities = await dexie.contacts.toArray();
+        return entities.map((entity: ContactTable) => this.mapTableToModel(entity));
+      }
+    } catch (error) {
+      console.error('Error getting all contacts:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieves a single contact entity by its ID.
+   * 
+   * @param id - The primary key (id) of the entity to retrieve
+   * @returns Promise resolving to the entity if found, or null if not found
    */
   async getById(id: string): Promise<Contact | null> {
     try {
@@ -128,34 +163,13 @@ export class ContactService {
   }
 
   /**
-   * Get all contacts
-   */
-  async getAll(): Promise<Contact[]> {
-    try {
-      if (this.databaseService.isNativeDatabase()) {
-        // SQLite implementation
-        const result = await this.databaseService.executeQuery('SELECT * FROM contacts');
-        
-        if (result.values && result.values.length > 0) {
-          return result.values.map((entity: ContactTable) => this.mapTableToModel(entity));
-        }
-        return [];
-      } else {
-        // Dexie implementation
-        const dexie = this.databaseService.getDexieInstance();
-        if (!dexie) throw new Error('Dexie database not initialized');
-        
-        const entities = await dexie.contacts.toArray();
-        return entities.map((entity: ContactTable) => this.mapTableToModel(entity));
-      }
-    } catch (error) {
-      console.error('Error getting all contacts:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Update contact
+   * Updates an existing contact entity in the database.
+   * Only the fields provided in the updates parameter will be modified.
+   * The updatedAt field is automatically set to the current timestamp.
+   * 
+   * @param id - The primary key (id) of the entity to update
+   * @param updates - Partial object containing only the fields to update
+   * @returns Promise resolving to true if the update was successful, false otherwise
    */
   async update(id: string, updates: Partial<Contact>): Promise<boolean> {
     try {
@@ -243,7 +257,10 @@ export class ContactService {
   }
 
   /**
-   * Delete contact
+   * Delete an existing contact entity from the database.
+   * 
+   * @param id - The primary key (id) of the entity to delete
+   * @returns Promise resolving to true if the delete was successful, false otherwise
    */
   async delete(id: string): Promise<boolean> {
     try {

@@ -50,7 +50,24 @@ export class DatabaseService {
     }
 
     await this.platform.ready();
-    this.isNative = this.platform.is('ios') || this.platform.is('android');
+    console.log("android ", this.platform.is('android'))
+    console.log("capacitor ", this.platform.is('capacitor'))
+    console.log("cordova ", this.platform.is('cordova'))
+    console.log("ios ", this.platform.is('ios'))
+    console.log("cordova ", this.platform.is('cordova'))
+    console.log("ipad ", this.platform.is('ipad'))
+    console.log("iphone ", this.platform.is('iphone'))
+    console.log("phablet ", this.platform.is('phablet'))
+    console.log("tablet ", this.platform.is('tablet'))
+    console.log("electron ", this.platform.is('electron'))
+    console.log("pwa ", this.platform.is('pwa'))
+    console.log("mobile ", this.platform.is('mobile'))
+    console.log("mobileweb ", this.platform.is('mobileweb'))
+    console.log("desktop ", this.platform.is('desktop'))
+    console.log("hybrid ", this.platform.is('hybrid'))
+
+    //this.isNative = this.platform.is('ios') || this.platform.is('android');
+    this.isNative = this.platform.is('hybrid');
 
     if (this.isNative) {
       await this.initNativeDatabase();
@@ -243,6 +260,7 @@ export class DatabaseService {
    * Execute a raw query on SQLite (only for native platforms)
    */
   async executeQuery(query: string, params: any[] = []): Promise<any> {
+    console.log(this.isNativeDatabase())
     if (!this.isNative || !this.db) {
       throw new Error('SQLite not available on this platform or database not initialized');
     }

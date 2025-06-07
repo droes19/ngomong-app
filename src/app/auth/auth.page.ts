@@ -5,7 +5,7 @@ import { AlertController, LoadingController, ToastController } from '@ionic/angu
 import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { UserService } from '../core/database/services/user.service';
-import { AuthService } from '../core/auth/auth.service';
+import { AuthService } from '../core/service/auth.service';
 
 @Component({
   selector: 'app-auth',

@@ -1,5 +1,5 @@
 // Auto-generated TypeScript service for the messages table
-// Generated on 2025-05-17T23:51:52.233Z
+// Generated on 2025-05-21T05:38:39.721Z
 // Originally defined in: V6__create_message_table.sql
 // Custom queries from SQL files
 
@@ -14,7 +14,10 @@ export class MessageService {
   constructor(private databaseService: DatabaseService) {}
 
   /**
-   * Create a new message
+   * Create a new message entity in the database.
+   * 
+   * @param message - The entity to create
+   * @returns Promise resolving to the ID of the created entity or undefined on failure
    */
   async create(message: Message): Promise<number | undefined> {
     const now = new Date().toISOString();
@@ -100,7 +103,39 @@ export class MessageService {
   }
 
   /**
-   * Get message by ID
+   * Retrieves all messages entities from the database.
+   * 
+   * @returns Promise resolving to an array of Message entities
+   */
+  async getAll(): Promise<Message[]> {
+    try {
+      if (this.databaseService.isNativeDatabase()) {
+        // SQLite implementation
+        const result = await this.databaseService.executeQuery('SELECT * FROM messages');
+        
+        if (result.values && result.values.length > 0) {
+          return result.values.map((entity: MessageTable) => this.mapTableToModel(entity));
+        }
+        return [];
+      } else {
+        // Dexie implementation
+        const dexie = this.databaseService.getDexieInstance();
+        if (!dexie) throw new Error('Dexie database not initialized');
+        
+        const entities = await dexie.messages.toArray();
+        return entities.map((entity: MessageTable) => this.mapTableToModel(entity));
+      }
+    } catch (error) {
+      console.error('Error getting all messages:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieves a single message entity by its ID.
+   * 
+   * @param id - The primary key (id) of the entity to retrieve
+   * @returns Promise resolving to the entity if found, or null if not found
    */
   async getById(id: number): Promise<Message | null> {
     try {
@@ -130,34 +165,13 @@ export class MessageService {
   }
 
   /**
-   * Get all messages
-   */
-  async getAll(): Promise<Message[]> {
-    try {
-      if (this.databaseService.isNativeDatabase()) {
-        // SQLite implementation
-        const result = await this.databaseService.executeQuery('SELECT * FROM messages');
-        
-        if (result.values && result.values.length > 0) {
-          return result.values.map((entity: MessageTable) => this.mapTableToModel(entity));
-        }
-        return [];
-      } else {
-        // Dexie implementation
-        const dexie = this.databaseService.getDexieInstance();
-        if (!dexie) throw new Error('Dexie database not initialized');
-        
-        const entities = await dexie.messages.toArray();
-        return entities.map((entity: MessageTable) => this.mapTableToModel(entity));
-      }
-    } catch (error) {
-      console.error('Error getting all messages:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Update message
+   * Updates an existing message entity in the database.
+   * Only the fields provided in the updates parameter will be modified.
+   * The updatedAt field is automatically set to the current timestamp.
+   * 
+   * @param id - The primary key (id) of the entity to update
+   * @param updates - Partial object containing only the fields to update
+   * @returns Promise resolving to true if the update was successful, false otherwise
    */
   async update(id: number, updates: Partial<Message>): Promise<boolean> {
     try {
@@ -247,7 +261,10 @@ export class MessageService {
   }
 
   /**
-   * Delete message
+   * Delete an existing message entity from the database.
+   * 
+   * @param id - The primary key (id) of the entity to delete
+   * @returns Promise resolving to true if the delete was successful, false otherwise
    */
   async delete(id: number): Promise<boolean> {
     try {

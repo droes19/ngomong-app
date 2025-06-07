@@ -1,26 +1,13 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title> Blank1 </ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-tabs>
+  <ion-tab-bar slot="bottom" color="light" *ngIf="shouldShowTabs">
+    <ion-tab-button tab="chats" href="home/chats">
+      <ion-icon name="chatbox-ellipses"></ion-icon>
+      <ion-label>Chats</ion-label>
+    </ion-tab-button>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
-
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>
-      Start with Ionic
-      <a
-        target="_blank"
-        rel="noopener noreferrer"
-        href="https://ionicframework.com/docs/components"
-        >UI Components</a
-      >
-    </p>
-  </div>
-</ion-content>
+    <ion-tab-button tab="test" href="home/test">
+      <ion-icon aria-hidden="true" name="chatbox-ellipses"></ion-icon>
+      <ion-label>Tab 2</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-tabs>

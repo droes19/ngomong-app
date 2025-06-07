@@ -1,0 +1,51 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <!--<ion-back-button-->
+      <!--  icon="caret-back"-->
+      <!--  defaultHref="/new-chat"-->
+      <!--></ion-back-button>-->
+      <ion-button class="min-w-12 min-h-12!" size="large" (click)="goBack()"><ion-icon name="caret-back" /></ion-button>
+    </ion-buttons>
+    <ion-title class="font-thin">New contact</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="light">
+  <form>
+    <ion-list class="p-0 my-2">
+      <ion-item color="light">
+        <ion-icon slot="start" name="person-outline"></ion-icon>
+        <ion-input color="primary" style="--background: transparent" [className]="'bg-none'" label="Nickname"
+          labelPlacement="floating" fill="solid" placeholder="Enter text"></ion-input>
+      </ion-item>
+      <!-- <ion-item color="light"> -->
+      <!--   <ion-icon slot="start"></ion-icon> -->
+      <!--   <ion-input -->
+      <!--     color="primary" -->
+      <!--     style="--background: transparent" -->
+      <!--     [className]="'bg-none'" -->
+      <!--     label="Last name" -->
+      <!--     labelPlacement="floating" -->
+      <!--     fill="solid" -->
+      <!--     placeholder="Enter text" -->
+      <!--   ></ion-input> -->
+      <!-- </ion-item> -->
+      <ion-item color="light">
+        <ion-icon slot="start" name="call-outline"></ion-icon>
+        <ion-input color="primary" style="--background: transparent" [className]="'bg-none w-[calc(35%)] mr-3'"
+          label="Country" labelPlacement="floating" fill="solid" placeholder="Enter text"></ion-input>
+        <ion-input color="primary" style="--background: transparent" [className]="'bg-none'" label="Phone"
+          labelPlacement="floating" fill="solid" placeholder="Enter text"></ion-input>
+      </ion-item>
+      <ion-item color="light">
+        <ion-icon slot="start" name="download-outline"></ion-icon>
+        <ion-select color="primary" style="--background: transparent" [className]="'bg-none'" label="Save to"
+          labelPlacement="floating" fill="solid" placeholder="Enter text">
+          <ion-select-option>Phone</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </ion-list>
+    <ion-button expand="block" class="absolute bottom-2 left-2 right-2" shape="round">Save</ion-button>
+  </form>
+</ion-content>

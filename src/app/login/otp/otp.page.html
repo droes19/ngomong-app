@@ -1,0 +1,59 @@
+<ion-content class="ion-padding">
+  <div class="max-w-lg my-0 mx-auto py-2 px-0 w-full h-full flex flex-col justify-center">
+    <div class="ion-text-center">
+      <ion-icon name="lock-closed" class="text-5xl text-(--ion-color-primary) mb-2"></ion-icon>
+      <h2 class="mt-4 mb-2 mx-0 font-semibold">Verification</h2>
+      <p class="mb-6 text-(--ion-color-medium)">
+        Enter the 6-digit code sent to your
+        <strong>{{ method }}</strong>
+      </p>
+    </div>
+
+    <form [formGroup]="verificationForm" (ngSubmit)="verifyOTP()" novalidate>
+      <div class="flex justify-between my-6 mx-0">
+        <ion-input
+          class="w-12 h-12 text-xl text-center border border-solid border-(--ion-color-medium) rounded-lg my-0 mx-1 px-0"
+          formControlName="digit1" type="tel" maxlength="1" #digit1 (ionInput)="onOtpInput($event, digit2)"></ion-input>
+        <ion-input
+          class="w-12 h-12 text-xl text-center border border-solid border-(--ion-color-medium) rounded-lg my-0 mx-1 px-0"
+          formControlName="digit2" type="tel" maxlength="1" #digit2 (ionInput)="onOtpInput($event, digit3)"></ion-input>
+        <ion-input
+          class="w-12 h-12 text-xl text-center border border-solid border-(--ion-color-medium) rounded-lg my-0 mx-1 px-0"
+          formControlName="digit3" type="tel" maxlength="1" #digit3 (ionInput)="onOtpInput($event, digit4)"></ion-input>
+        <ion-input
+          class="w-12 h-12 text-xl text-center border border-solid border-(--ion-color-medium) rounded-lg my-0 mx-1 px-0"
+          formControlName="digit4" type="tel" maxlength="1" #digit4 (ionInput)="onOtpInput($event, digit5)"></ion-input>
+        <ion-input
+          class="w-12 h-12 text-xl text-center border border-solid border-(--ion-color-medium) rounded-lg my-0 mx-1 px-0"
+          formControlName="digit5" type="tel" maxlength="1" #digit5 (ionInput)="onOtpInput($event, digit6)"></ion-input>
+        <ion-input
+          class="w-12 h-12 text-xl text-center border border-solid border-(--ion-color-medium) rounded-lg my-0 mx-1 px-0"
+          formControlName="digit6" type="tel" maxlength="1" #digit6></ion-input>
+      </div>
+
+      <div *ngIf="isVerificationSubmitted && !verificationForm.valid"
+        class="text-(--ion-color-danger) text-sm mt-2 mx-0 mb-4 ion-text-center">
+        Please enter all 6 digits of the verification code.
+      </div>
+
+      <ion-button expand="block" type="submit" color="primary" class="ion-margin-top">
+        Verify & Complete
+      </ion-button>
+
+      <!-- Back button (to replace the header back button) -->
+      <ion-button expand="block" fill="outline" color="medium" class="ion-margin-top" (click)="goBack()">
+        Go Back
+      </ion-button>
+
+      <div class="mt-6 ion-text-center ion-margin-top">
+        <p class="text-(--ion-color-medium) my-4 mx-0 text-base flex justify-center items-center">
+          <span class="align-middle ">Didn't receive the code?</span>
+          <ion-button fill="clear" class="m-0 h-auto p-1 text-base" size="small" [disabled]="countdown > 0"
+            (click)="resendOTP()">
+            Resend {{ countdown > 0 ? '(' + countdown + ')' : '' }}
+          </ion-button>
+        </p>
+      </div>
+    </form>
+  </div>
+</ion-content>
