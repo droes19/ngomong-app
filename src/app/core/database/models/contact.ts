@@ -1,5 +1,5 @@
 // Auto-generated TypeScript model for the contacts table
-// Generated on 2025-05-17T23:51:52.023Z
+// Generated on 2025-06-07T18:16:20.345Z
 // Originally defined in: V2__create_contact_table.sql
 
 import { BaseModel, BaseTable } from './base.model';
@@ -18,6 +18,8 @@ export interface Contact extends BaseModel<string> {
   /** Default: 'active' */
   status?: string;
   avatarPath?: string;
+  /** Default: 0 */
+  isMe?: number;
 }
 
 /**
@@ -34,4 +36,6 @@ export interface ContactTable extends BaseTable<string> {
   /** Default: 'active' */
   status?: string;
   avatar_path?: string;
+  /** Default: 0 */
+  is_me?: number;
 }

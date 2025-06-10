@@ -8,7 +8,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'home/chats',
+    redirectTo: 'chats',
     pathMatch: 'full',
   },
 ];

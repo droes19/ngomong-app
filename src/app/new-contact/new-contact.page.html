@@ -11,33 +11,43 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content color="light">
+<ion-content color="light" class="h-full">
+  @if(!hasSearch){
+  <form [formGroup]="searchContactForm" (ngSubmit)="searchContact()" novalidate>
+    <ion-list class=" p-0 my-2">
+      <ion-item color="light">
+        <ion-icon slot="start" name="person-outline"></ion-icon>
+        <ion-input color="primary" style="--background: transparent" [className]="'bg-none'" label="PIN or Email"
+          labelPlacement="floating" fill="solid" placeholder="Enter text" [clearInput]="true"
+          formControlName="pinOrEmail"></ion-input>
+      </ion-item>
+      @if(searchContactForm.get('pinOrEmail')?.invalid && searchContactForm.get('pinOrEmail')?.touched &&
+      searchContactForm.get('pinOrEmail')?.errors?.['validSearchContact']){
+      <ion-item color="ligth">
+        <ion-icon slot="start"></ion-icon>
+        <span class="text-(--ion-color-danger) text-xs"> {{
+          searchContactForm.get('pinOrEmail')?.errors?.['validSearchContact']?.message }} </span>
+      </ion-item>
+      }
+    </ion-list>
+    <ion-button type="submit" expand="block" class="absolute bottom-2 left-2 right-2 normal-case" color="primary"
+      shape="round">Search</ion-button>
+  </form>
+  }@else{
   <form>
     <ion-list class="p-0 my-2">
       <ion-item color="light">
         <ion-icon slot="start" name="person-outline"></ion-icon>
         <ion-input color="primary" style="--background: transparent" [className]="'bg-none'" label="Nickname"
-          labelPlacement="floating" fill="solid" placeholder="Enter text"></ion-input>
+          labelPlacement="floating" fill="solid" placeholder="Enter text" [clearInput]="true"></ion-input>
       </ion-item>
       <!-- <ion-item color="light"> -->
-      <!--   <ion-icon slot="start"></ion-icon> -->
-      <!--   <ion-input -->
-      <!--     color="primary" -->
-      <!--     style="--background: transparent" -->
-      <!--     [className]="'bg-none'" -->
-      <!--     label="Last name" -->
-      <!--     labelPlacement="floating" -->
-      <!--     fill="solid" -->
-      <!--     placeholder="Enter text" -->
-      <!--   ></ion-input> -->
+      <!--   <ion-icon slot="start" name="call-outline"></ion-icon> -->
+      <!--   <ion-input color="primary" style="--background: transparent" [className]="'bg-none w-[calc(35%)] mr-3'" -->
+      <!--     label="Country" labelPlacement="floating" fill="solid" placeholder="Enter text"></ion-input> -->
+      <!--   <ion-input color="primary" style="--background: transparent" [className]="'bg-none'" label="Phone" -->
+      <!--     labelPlacement="floating" fill="solid" placeholder="Enter text"></ion-input> -->
       <!-- </ion-item> -->
-      <ion-item color="light">
-        <ion-icon slot="start" name="call-outline"></ion-icon>
-        <ion-input color="primary" style="--background: transparent" [className]="'bg-none w-[calc(35%)] mr-3'"
-          label="Country" labelPlacement="floating" fill="solid" placeholder="Enter text"></ion-input>
-        <ion-input color="primary" style="--background: transparent" [className]="'bg-none'" label="Phone"
-          labelPlacement="floating" fill="solid" placeholder="Enter text"></ion-input>
-      </ion-item>
       <ion-item color="light">
         <ion-icon slot="start" name="download-outline"></ion-icon>
         <ion-select color="primary" style="--background: transparent" [className]="'bg-none'" label="Save to"
@@ -46,6 +56,8 @@
         </ion-select>
       </ion-item>
     </ion-list>
-    <ion-button expand="block" class="absolute bottom-2 left-2 right-2" shape="round">Save</ion-button>
   </form>
+  <ion-button expand="block" class="absolute bottom-12 left-2 right-2" color="medium" shape="round">Back</ion-button>
+  <ion-button expand="block" class="absolute bottom-2 left-2 right-2" color="primary" shape="round">Save</ion-button>
+  }
 </ion-content>

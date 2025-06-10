@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { callOutline, caretBack, chatboxEllipses, chatbubbleEllipses, downloadOutline, lockClosed, personAdd, personOutline } from 'ionicons/icons';
+import { callOutline, caretBack, chatboxEllipses, chatbubbleEllipses, downloadOutline, lockClosed, personAdd, personOutline, searchOutline } from 'ionicons/icons';
 import { WebsocketService } from './core/service/websocket.service';
 import { UserService } from './core/database';
 import { WebsocketDTO, WebsocketHandler } from './handler/websocket.handler';
@@ -17,7 +17,7 @@ export class AppComponent implements OnInit {
     private userService: UserService,
     private wsHandler: WebsocketHandler,
   ) {
-    addIcons({ chatboxEllipses, chatbubbleEllipses, caretBack, personAdd, personOutline, callOutline, downloadOutline, lockClosed })
+    addIcons({ chatboxEllipses, chatbubbleEllipses, caretBack, personAdd, personOutline, callOutline, downloadOutline, lockClosed, searchOutline })
     addIcons({})
   }
 

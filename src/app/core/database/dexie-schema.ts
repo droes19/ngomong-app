@@ -1,5 +1,5 @@
 // Auto-generated Dexie.js database class from SQLite migrations
-// Generated on 2025-05-17T23:51:52.161Z
+// Generated on 2025-06-07T18:16:20.919Z
 
 import Dexie from 'dexie';
 
@@ -87,6 +87,17 @@ export class AppDatabase extends Dexie {
     this.version(8).stores({
       user: 'id, email, identity_key_pair, identity_public_key, nickname, phone_number, pin',
       contacts: 'id, avatar_path, email, identity_public_key, nickname, phone_number, pin, status',
+      sessions: '++id, active, contact_id, dh_peer_ratchet_key, dh_ratchet_key_pair, dh_ratchet_public_key, previous_sending_counter, receiving_chain_key, receiving_counter, root_key, sending_chain_key, sending_counter',
+      skipped_message_keys: '++id, counter, message_key, ratchet_key, session_id',
+      conversations: '++id, archived, contact_id, last_message_preview, last_message_timestamp, pinned, session_id, unread_count',
+      messages: '++id, conversation_id, delivered_timestamp, message_type, read_timestamp, sender_id, sent, sent_timestamp, session_id, status',
+      devices: '++id, active, contact_id, device_id, identity_public_key'
+    });
+
+    // v9 migration
+    this.version(9).stores({
+      user: 'id, email, identity_key_pair, identity_public_key, nickname, phone_number, pin',
+      contacts: 'id, avatar_path, email, identity_public_key, is_me, nickname, phone_number, pin, status',
       sessions: '++id, active, contact_id, dh_peer_ratchet_key, dh_ratchet_key_pair, dh_ratchet_public_key, previous_sending_counter, receiving_chain_key, receiving_counter, root_key, sending_chain_key, sending_counter',
       skipped_message_keys: '++id, counter, message_key, ratchet_key, session_id',
       conversations: '++id, archived, contact_id, last_message_preview, last_message_timestamp, pinned, session_id, unread_count',

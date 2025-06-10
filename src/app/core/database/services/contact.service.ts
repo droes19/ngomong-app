@@ -1,5 +1,5 @@
 // Auto-generated TypeScript service for the contacts table
-// Generated on 2025-05-21T05:38:39.701Z
+// Generated on 2025-06-07T18:16:20.662Z
 // Originally defined in: V2__create_contact_table.sql
 // Custom queries from SQL files
 
@@ -41,6 +41,7 @@ export class ContactService {
           avatar_path: entityToInsert.avatarPath,
           created_at: entityToInsert.createdAt,
           updated_at: entityToInsert.updatedAt,
+          is_me: entityToInsert.isMe,
         };
 
         // SQLite implementation
@@ -55,8 +56,9 @@ export class ContactService {
             status,
             avatar_path,
             created_at,
-            updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            updated_at,
+            is_me
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             tableRow.id,
             tableRow.nickname,
@@ -67,7 +69,8 @@ export class ContactService {
             tableRow.status || null,
             tableRow.avatar_path || null,
             tableRow.created_at,
-            tableRow.updated_at
+            tableRow.updated_at,
+            tableRow.is_me || null
           ]
         );
 
@@ -89,6 +92,7 @@ export class ContactService {
           avatar_path: entityToInsert.avatarPath,
           created_at: entityToInsert.createdAt,
           updated_at: entityToInsert.updatedAt,
+          is_me: entityToInsert.isMe,
         };
 
         const id = await dexie.contacts.add(tableRow);
@@ -196,6 +200,7 @@ export class ContactService {
           avatarPath: 'avatar_path',
           createdAt: 'created_at',
           updatedAt: 'updated_at',
+          isMe: 'is_me',
         };
 
         for (const [key, value] of Object.entries(updatedEntity)) {
@@ -234,6 +239,7 @@ export class ContactService {
           avatarPath: 'avatar_path',
           createdAt: 'created_at',
           updatedAt: 'updated_at',
+          isMe: 'is_me',
         };
 
         // Transform to snake_case for consistent field names
@@ -320,6 +326,39 @@ export class ContactService {
   }
 
   /**
+   * findByEmail - Custom query
+   *
+   * @param email Parameters for the query
+   * @returns Entity or null
+   */
+  async findByEmail(email: any): Promise<Contact | null> {
+    try {
+      if (this.databaseService.isNativeDatabase()) {
+        // SQLite implementation
+        const result = await this.databaseService.executeQuery(
+          `SELECT * FROM contacts WHERE email = ?;`,
+          [email]
+        );
+
+        if (result.values && result.values.length > 0) {
+          return this.mapTableToModel(result.values[0]);
+        }
+        return null;
+      } else {
+        // Dexie implementation
+        const dexie = this.databaseService.getDexieInstance();
+        if (!dexie) throw new Error('Dexie database not initialized');
+
+        const entity = await dexie.contacts.where('email').equals(email).first();
+        return entity ? this.mapTableToModel(entity) : null;
+      }
+    } catch (error) {
+      console.error('Error executing findByEmail:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Map database entity object to model
    */
   private mapTableToModel(tableRow: ContactTable): Contact {
@@ -355,6 +394,9 @@ export class ContactService {
     }
     if (tableRow.updated_at !== undefined) {
       model.updatedAt = tableRow.updated_at;
+    }
+    if (tableRow.is_me !== undefined) {
+      model.isMe = tableRow.is_me;
     }
     return model as Contact;
   }

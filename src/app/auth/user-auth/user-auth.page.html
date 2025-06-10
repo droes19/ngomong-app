@@ -1,0 +1,33 @@
+<ion-content class="ion-padding" color="light">
+  <form [formGroup]="userForm" (ngSubmit)="saveForm()" novalidate>
+    <ion-list class=" p-0 my-2">
+      <ion-item color="light">
+        <ion-icon slot="start" name="person-outline"></ion-icon>
+        <ion-input color="primary" style="--background: transparent" [className]="'bg-none'" label="Nickname"
+          labelPlacement="floating" fill="solid" placeholder="Enter text" [clearInput]="true"
+          formControlName="nickname"></ion-input>
+      </ion-item>
+      @if(userForm.get('nickname')?.invalid && userForm.get('nickname')?.touched &&
+      userForm.get('nickname')?.errors?.['required']){
+        <ion-item color="ligth">
+          <ion-icon slot="start"></ion-icon>
+          <span class="text-(--ion-color-danger) text-xs"> {{ "Nickname is required" }} </span>
+        </ion-item>
+      }
+      <ion-item color="light">
+        <ion-icon slot="start" name="person-outline"></ion-icon>
+        <ion-input color="primary" style="--background: transparent" [className]="'bg-none'" label="PIN"
+          labelPlacement="floating" fill="solid" placeholder="Enter text"
+          formControlName="pin"></ion-input>
+      </ion-item>
+      <ion-item color="light">
+        <ion-icon slot="start" name="person-outline"></ion-icon>
+        <ion-input color="primary" style="--background: transparent" [className]="'bg-none'" label="Email"
+          labelPlacement="floating" fill="solid" placeholder="Enter text"
+          formControlName="email"></ion-input>
+      </ion-item>
+    </ion-list>
+    <ion-button type="submit" expand="block" class="absolute bottom-2 left-2 right-2 normal-case" color="primary"
+      shape="round">Save</ion-button>
+  </form>
+</ion-content>

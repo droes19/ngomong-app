@@ -1,12 +1,11 @@
-import { Component, computed, input, Input, OnInit } from '@angular/core';
+import { Component, input, OnInit } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AlertController, IonContent, IonHeader, IonTitle, IonToolbar, LoadingController } from '@ionic/angular/standalone';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AlertController, LoadingController } from '@ionic/angular/standalone';
 import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpErrorResponse } from '@angular/common/module.d-CnjH8Dlt';
 import { AuthService } from 'src/app/core/service/auth.service';
-import { User, UserService } from 'src/app/core/database';
+import { Contact, ContactService, User, UserService } from 'src/app/core/database';
 import { KeyService } from 'src/app/core/util/service/key.service';
 
 @Component({
@@ -37,6 +36,7 @@ export class OtpPage implements OnInit {
     private keyService: KeyService,
     private activatedRoute: ActivatedRoute,
     private router: Router,
+    private contactService: ContactService,
   ) { }
 
   ngOnInit() {
@@ -83,12 +83,12 @@ export class OtpPage implements OnInit {
     });
     await loading.present();
 
-    this.authService.verifyOtp(this.value(), fullOtp).subscribe({
+    const keyPair = await this.keyService.generateKeyPair();
+    this.authService.verifyOtp(this.type(), this.value(), fullOtp, keyPair.publicKey).subscribe({
       next: async (res: any) => {
         await loading.dismiss();
         console.log(res)
         const now = new Date().toISOString();
-        const keyPair = await this.keyService.generateKeyPair();
         const user: User = {
           id: res.pin,
           email: res.email,
@@ -100,7 +100,18 @@ export class OtpPage implements OnInit {
           updatedAt: now,
         }
         await this.userService.create(user);
-        this.router.navigateByUrl('/home');
+        const contact: Contact = {
+          id: res.pin,
+          nickname: res.nickname,
+          pin: res.pin,
+          email: res.email,
+          identityPublicKey: keyPair.publicKey,
+          isMe: 1,
+          createdAt: now,
+          updatedAt: now,
+        }
+        await this.contactService.create(contact);
+        this.router.navigateByUrl('/auth/user');
       },
       error: async (err: any) => {
         await loading.dismiss();

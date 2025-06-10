@@ -1,5 +1,5 @@
 // Auto-generated SQLite migrations array from SQL files
-// Generated on 2025-05-21T05:38:39.554Z
+// Generated on 2025-06-07T18:16:20.544Z
 
 import { capSQLiteVersionUpgrade } from "@capacitor-community/sqlite";
 
@@ -83,6 +83,13 @@ export const ALL_MIGRATIONS: Migration[] = [
       `CREATE TRIGGER IF NOT EXISTS contacts_updated_at AFTER UPDATE ON contacts BEGIN UPDATE contacts SET updated_at = datetime ('now', 'localtime') WHERE id = NEW.id; END;`,
       `CREATE TRIGGER IF NOT EXISTS sessions_updated_at AFTER UPDATE ON sessions BEGIN UPDATE sessions SET updated_at = datetime ('now', 'localtime') WHERE id = NEW.id; END;`,
       `CREATE TRIGGER IF NOT EXISTS conversations_updated_at AFTER UPDATE ON conversations BEGIN UPDATE conversations SET updated_at = datetime ('now', 'localtime') WHERE id = NEW.id; END;`
+    ]
+  },
+  {
+    version: 9,
+    description: 'Update Contact Table',
+    queries: [
+      `ALTER TABLE contacts ADD COLUMN is_me integer default 0;`
     ]
   }
 ];

@@ -15,14 +15,10 @@ export const routes: Routes = [
   },
   {
     path: 'auth',
-    loadComponent: () => import('./auth/auth.page').then(m => m.AuthPage)
-  },
-  {
-    path: 'login',
-    loadChildren: () => import('./login/login.routes').then(m => m.routes)
+    loadChildren: () => import('./auth/auth.routes').then(m => m.routes)
   },
   {
     path: 'test',
-    loadComponent: () => import('./test/test.page').then( m => m.TestPage)
+    loadComponent: () => import('./test/test.page').then(m => m.TestPage)
   }
 ];
